@@ -5,7 +5,7 @@
 */
 
 import { useEffect, useRef } from "react";
-import Tilt from 'react-parallax-tilt'; // Import Tilt
+import { motion } from "framer-motion";
 
 class Pixel {
   constructor(canvas, context, x, y, color, speed, delay) {
@@ -142,11 +142,10 @@ export default function PixelCard({
   speed,
   colors,
   noFocus,
+  imageUrl,
+  imageShape,
   className = "",
-  children,
-  onClick,
-  imageUrl, // New prop for image URL
-  imageShape // New prop for image shape
+  children
 }) {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
@@ -263,47 +262,52 @@ export default function PixelCard({
   }, [finalGap, finalSpeed, finalColors, finalNoFocus]);
 
   return (
-    <Tilt // Wrap with Tilt for tilting effect
-      tiltEnable={!noFocus}
-      tiltMaxAngleX={10}
-      tiltMaxAngleY={10}
-      className={`relative ${className}`}
+    <motion.div
+      ref={containerRef}
+      className={`h-[400px] w-[300px] relative overflow-hidden grid place-items-center aspect-[4/5] border border-[#27272a] rounded-[25px] isolate select-none perspective-1000 transform-style-preserve-3d ${className}`}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      onFocus={finalNoFocus ? undefined : onFocus}
+      onBlur={finalNoFocus ? undefined : onBlur}
+      tabIndex={finalNoFocus ? -1 : 0}
+      // Enhanced tilt effect with more dramatic rotation and parallax
+      whileHover={{ 
+        scale: 1.05, 
+        rotateX: 10, 
+        rotateY: -15,
+        transition: {
+          type: "spring",
+          stiffness: 300,
+          damping: 15
+        }
+      }}
     >
-      <div
-        ref={containerRef}
-        className={`relative overflow-hidden grid place-items-center aspect-[4/5] border border-[#27272a] rounded-[25px] isolate transition-colors duration-200 ease-[cubic-bezier(0.5,1,0.89,1)] select-none`}
-        onClick={onClick}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-        onFocus={finalNoFocus ? undefined : onFocus}
-        onBlur={finalNoFocus ? undefined : onBlur}
-        tabIndex={finalNoFocus ? -1 : 0}
-      >
-        <canvas
-          className="w-full h-full block absolute top-0 left-0 z-0" // Added z-0
-          ref={canvasRef}
+      <canvas
+        className="absolute top-0 left-0 w-full h-full pointer-events-none z-0"
+        ref={canvasRef}
+      />
+      {imageUrl && (
+        <motion.img
+          src={imageUrl}
+          alt="Card"
+          className={`absolute top-6 left-1/2 transform -translate-x-1/2 w-32 h-32 object-cover mb-8 ${
+            imageShape === "rounded-full"
+              ? "rounded-full"
+              : imageShape === "rounded-lg"
+              ? "rounded-lg"
+              : ""
+          } z-10`}
+          // Add parallax effect to image
+          whileHover={{ 
+            y: -5,
+            scale: 1.1,
+            transition: { type: "spring", stiffness: 300 }
+          }}
         />
-        <div className="relative z-10 p-4 text-center flex flex-col justify-between h-full">
-          {/* Add Image */}
-          {imageUrl && (
-            <img
-              alt={children.props.title || "Service Image"}
-              src={imageUrl}
-              className={` ${imageShape === 'rounded-full' ? 'rounded-full' : imageShape === 'rounded-lg' ? 'rounded-lg' : ''} w-34 h-34 object-cover`}
-            />
-          )}
-          <div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">{children.props.title}</h3>
-            <p className="text-gray-600 text-lg">{children.props.desc}</p>
-          </div>
-          <button 
-            className="mt-3 px-6 py-2 bg-pink-600/90 text-white rounded-lg hover:bg-pink-700/90 transition duration-300 mb-3"
-            onClick={() => openModal(children.props.title)}
-          >
-            Learn More
-          </button>
-        </div>
+      )}
+      <div className="relative z-10 mt-40"> {/* Increased margin-top for spacing */}
+        {children}
       </div>
-    </Tilt>
+    </motion.div>
   );
 }

@@ -6,6 +6,7 @@ import App from './App.jsx';
 import LoginPage from './Pages/LoginPage.jsx';
 import RegisterPage from './Pages/RegisterPage.jsx';
 import LandingPage from './Pages/LandingPage.jsx';
+import HomePage from './Pages/HomePage.jsx';
 
 createRoot(document.getElementById('root')).render(
 
@@ -15,6 +16,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/user/login" element={<LoginPage />} />
         <Route path="/user/register" element={<RegisterPage />} />
         <Route path="/landing" element={<LandingPage />} />
+        <Route path="/home" element={<HomePage />} />
       </Routes>
     </BrowserRouter>
 
