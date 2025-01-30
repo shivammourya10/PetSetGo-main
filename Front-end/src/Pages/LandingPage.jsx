@@ -1,8 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import Tilt from 'react-parallax-tilt';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
+import PixelCard from '../Blocks/Components/PixelCard/PixelCard';
+import SplashCursor from '../Blocks/Animations/SplashCursor/SplashCursor';
+import DecryptedText from '../Blocks/TextAnimations/DecryptedText/DecryptedText';
 
 const ServiceDetails = {
   "Pet Mate": {
@@ -62,8 +64,13 @@ const LandingPage = () => {
     servicesRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  return (
+  return (<div>
+    
     <div className="relative min-h-screen bg-gradient-to-b from-blue-100 to-pink-100 font-sans">
+{/* <SplashCursor/> */}
+
+
+        
       {/* Hero Section */}
       <div className="relative w-full h-screen flex flex-col items-center justify-center text-center px-6">
         <motion.div 
@@ -72,15 +79,15 @@ const LandingPage = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 3 }}
         >
-          <img src="https://www.example.com/pet-care-background.jpg" alt="Pet Care" className="object-cover w-full h-full" />
+          <img src="https://images.pexels.com/photos/1254140/pexels-photo-1254140.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Pet Care" className="object-cover w-full h-full" />
         </motion.div>
 
         <div className="relative z-10 text-white space-y-6">
           <motion.h1
             className="text-6xl font-extrabold drop-shadow-md mb-6"
-            initial={{ opacity: 0, y: -50 }}
+            initial={{ opacity: 0, y: -70 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
+            transition={{ duration: 3 }}
           >
             Welcome to PetCare Haven
           </motion.h1>
@@ -89,7 +96,7 @@ const LandingPage = () => {
             className="text-xl max-w-2xl mx-auto mb-8"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.5 }}
+            transition={{ duration: 2, delay: 0.5 }}
           >
             Your pet's health and happiness are our top priority. Explore our services and make life better for your furry friends.
           </motion.p>
@@ -98,7 +105,7 @@ const LandingPage = () => {
             className="bg-pink-600 text-white py-3 px-8 rounded-lg shadow-lg text-lg font-semibold hover:bg-pink-700 transition duration-300"
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 1 }}
           >
             Get Started
           </motion.button>
@@ -132,44 +139,67 @@ const LandingPage = () => {
           </div>
         </motion.div>
       </div>
+      
 
-      {/* Services Section */}
-      <div ref={servicesRef} className="py-20 bg-white">
-        <h2 className="text-4xl font-bold text-center mb-12 text-gray-800">Explore Our Services</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 max-w-7xl mx-auto px-4">
-          {[
-            { title: "Pet Mate", desc: "Find your pet's perfect companion.", img: "https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg" },
-            { title: "Adopt", desc: "Give a pet a loving home.", img: "https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg" },
-            { title: "Pet Products", desc: "Find quality pet essentials.", img: "https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg" },
-            { title: "Personalized Diet", desc: "Get a custom diet plan.", img: "https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg" }
+    {/* Services Section with PixelCards */}
+        <div ref={servicesRef} className="py-20 bg-gradient-to-b from-green-100 to-purple-100">
+          <h2 className="text-4xl font-bold text-center mb-12 text-gray-800">Explore Our Services</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 max-w-7xl mx-auto px-4">
+            {[
+            { 
+              title: "Pet Mate", 
+              desc: "Find your pet's perfect companion.", 
+              variant: "pink",
+              imageUrl: "https://images.pexels.com/photos/58997/pexels-photo-58997.jpeg?auto=compress&cs=tinysrgb&w=800",
+              imageShape: "rounded-full" // Options: 'rounded-full', 'rounded-lg', 'none'
+            },
+            { 
+              title: "Adopt", 
+              desc: "Give a pet a loving home.", 
+              variant: "yellow",
+              imageUrl: "https://images.pexels.com/photos/58997/pexels-photo-58997.jpeg?auto=compress&cs=tinysrgb&w=800",
+              imageShape: "rounded-full"
+            },
+            { 
+              title: "Pet Products", 
+              desc: "Find quality pet essentials.", 
+              variant: "pink",
+              imageUrl: "https://images.pexels.com/photos/58997/pexels-photo-58997.jpeg?auto=compress&cs=tinysrgb&w=800",
+              imageShape: "rounded-full"
+            },
+            { 
+              title: "Personalized Diet", 
+              desc: "Get a custom diet plan for your pet.", 
+              variant: "yellow",
+              imageUrl: "https://images.pexels.com/photos/58997/pexels-photo-58997.jpeg?auto=compress&cs=tinysrgb&w=800",
+              imageShape: "rounded-full"
+            }
           ].map((service, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.2 }}
+              transition={{ duration: 1, delay: index * 0.2 }}
               viewport={{ once: true }}
-              className="flex"
             >
-              <Tilt className="bg-white rounded-xl shadow-xl hover:shadow-2xl transition duration-300 flex-1">
-                <div className="p-6 space-y-4 flex flex-col h-full">
-                  <div className="h-48 overflow-hidden rounded-lg">
-                    <img 
-                      src={service.img} 
-                      alt={service.title} 
-                      className="w-full h-full object-cover transform hover:scale-110 transition duration-500"
-                    />
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-800">{service.title}</h3>
-                  <p className="text-gray-600 text-lg flex-grow">{service.desc}</p>
+              <PixelCard
+                variant={service.variant}
+                className="cursor-pointer"
+                onClick={() => openModal(service.title)}
+                imageUrl={service.imageUrl} // Pass imageUrl prop
+                imageShape={service.imageShape} // Pass imageShape prop
+              >
+                <div className="relative z-10 p-6 text-center">
+                  <h3 className="text-2xl font-bold text-gray-800 mb-4">{service.title}</h3>
+                  <p className="text-gray-600 text-lg">{service.desc}</p>
                   <button 
+                    className="mt-6 px-6 py-2 bg-pink-600/90 text-white rounded-lg hover:bg-pink-700/90 transition duration-300"
                     onClick={() => openModal(service.title)}
-                    className="mt-4 px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition duration-300 w-full"
                   >
                     Learn More
                   </button>
                 </div>
-              </Tilt>
+              </PixelCard>
             </motion.div>
           ))}
         </div>
@@ -251,19 +281,35 @@ const LandingPage = () => {
         </div>
       </div>
 
-      {/* About Us */}
-      <div className="py-20 bg-white text-center">
-        <h2 className="text-5xl font-extrabold mb-6 text-gray-800">About Us</h2>
-        <p className="max-w-3xl mx-auto text-gray-700 leading-relaxed">
-          We are passionate about providing a one-stop platform for pet owners. Our mission is to make pet care effortless and enjoyable.
-        </p>
-      </div>
+    {/* About Us */}
+        <div className="py-20 bg-white text-center">
+            <h2 className="text-5xl font-extrabold mb-6 text-gray-800">About Us</h2>
+            <div style={{ marginTop: '4rem' }}>
+                <DecryptedText
+                    text="At Pet Wellbeing, we are passionate about providing a one-stop platform that makes pet care effortless, enjoyable, and deeply rewarding. We understand that pets are not just animals; they are family, companions, and a source of unconditional love. Our mission is to enhance the lives of pets and their owners by offering expert guidance, innovative solutions, and a supportive community—all in one place.
 
-      {/* Footer */}
+Our Vision
+
+We envision a world where every pet gets the best possible care, and every pet parent has the knowledge and resources to ensure their furry friends lead healthy, happy, and fulfilling lives."
+                    speed={100}
+                    maxIterations={10}
+                    characters="ABCD1234!?"
+                    className="revealed"
+                    parentClassName="all-letters"
+                    encryptedClassName="encrypted"
+                    animateOn="view"
+                    revealDirection="center"
+                />
+            </div>
+        </div>
+
+        {/* Footer */}
       <div className="bg-gray-800 py-12 text-center text-white">
         <p className="text-lg">&copy; 2025 PetCare Haven. All rights reserved.</p>
         <p className="text-sm mt-2">Follow us on social media</p>
       </div>
+    </div>
+
     </div>
   );
 };
