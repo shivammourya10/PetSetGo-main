@@ -67,7 +67,7 @@ const LandingPage = () => {
   return (<div>
     
     <div className="relative min-h-screen bg-gradient-to-b from-blue-100 to-pink-100 font-sans">
-{/* <SplashCursor/> */}
+<SplashCursor/>
 
 
         

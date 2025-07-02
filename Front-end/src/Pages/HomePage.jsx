@@ -12,12 +12,50 @@ const dummyPets = [
   { id: 1, name: "Buddy", age: "2 years", image: "https://via.placeholder.com/100" },
   { id: 2, name: "Luna", age: "3 years", image: "" },
   { id: 3, name: "Rocky", age: "1 year", image: "https://via.placeholder.com/100" },
+  { id: 1, name: "Buddy", age: "2 years", image: "https://via.placeholder.com/100" },
+  { id: 2, name: "Luna", age: "3 years", image: "" },
+  { id: 3, name: "Rocky", age: "1 year", image: "https://via.placeholder.com/100" },
+  { id: 1, name: "Buddy", age: "2 years", image: "https://via.placeholder.com/100" },
+  { id: 2, name: "Luna", age: "3 years", image: "" },
+  { id: 3, name: "Rocky", age: "1 year", image: "https://via.placeholder.com/100" },
+  { id: 1, name: "Buddy", age: "2 years", image: "https://via.placeholder.com/100" },
+  { id: 2, name: "Luna", age: "3 years", image: "" },
+  { id: 3, name: "Rocky", age: "1 year", image: "https://via.placeholder.com/100" },
+  { id: 1, name: "Buddy", age: "2 years", image: "https://via.placeholder.com/100" },
+  { id: 2, name: "Luna", age: "3 years", image: "" },
+  { id: 3, name: "Rocky", age: "1 year", image: "https://via.placeholder.com/100" },
+  { id: 1, name: "Buddy", age: "2 years", image: "https://via.placeholder.com/100" },
+  { id: 2, name: "Luna", age: "3 years", image: "" },
+  { id: 3, name: "Rocky", age: "1 year", image: "https://via.placeholder.com/100" },
+  { id: 1, name: "Buddy", age: "2 years", image: "https://via.placeholder.com/100" },
+  { id: 2, name: "Luna", age: "3 years", image: "" },
+  { id: 3, name: "Rocky", age: "1 year", image: "https://via.placeholder.com/100" },
+  { id: 1, name: "Buddy", age: "2 years", image: "https://via.placeholder.com/100" },
+  { id: 2, name: "Luna", age: "3 years", image: "" },
+  { id: 3, name: "Rocky", age: "1 year", image: "https://via.placeholder.com/100" },
+  { id: 1, name: "Buddy", age: "2 years", image: "https://via.placeholder.com/100" },
+  { id: 2, name: "Luna", age: "3 years", image: "" },
+  { id: 3, name: "Rocky", age: "1 year", image: "https://via.placeholder.com/100" },
+  { id: 1, name: "Buddy", age: "2 years", image: "https://via.placeholder.com/100" },
+  { id: 2, name: "Luna", age: "3 years", image: "" },
+  { id: 3, name: "Rocky", age: "1 year", image: "https://via.placeholder.com/100" },
+  { id: 1, name: "Buddy", age: "2 years", image: "https://via.placeholder.com/100" },
+  { id: 2, name: "Luna", age: "3 years", image: "" },
+  { id: 3, name: "Rocky", age: "1 year", image: "https://via.placeholder.com/100" },
+
 ];
 
 const dummyTips = [
   "Ensure your pet gets regular exercise to stay healthy!",
   "Always provide fresh water for your pets.",
   "Visit the vet at least once a year for checkups.",
+  "Ensure your pet gets regular exercise to stay healthy!",
+  "Always provide fresh water for your pets.",
+  "Visit the vet at least once a year for checkups.",
+  "Ensure your pet gets regular exercise to stay healthy!",
+  "Always provide fresh water for your pets.",
+  "Visit the vet at least once a year for checkups.", "Ensure your pet gets regular exercise to stay healthy!",
+
 ];
 
 const HomePage = () => {
@@ -27,7 +65,7 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-pink-100 p-6 relative">
       {/* Fixed Navbar (user info on top left) */}
-      <div className="fixed top-0 left-0 w-full bg-white shadow-md p-4 flex justify-between items-center z-50">
+      <div className="fixed top-0 left-0 w-full bg-white shadow-md p-4 flex justify-between items-center z-50 h-17">
         <h2 className="text-xl font-bold">Hello, {user.name}! Welcome back</h2>
         <div className="w-10 h-10 flex items-center justify-center bg-pink-500 text-white font-bold rounded-full">
           {user.name.charAt(0)}
@@ -36,7 +74,7 @@ const HomePage = () => {
 
       {/* Right-side Tips Panel */}
       <motion.div
-        className="fixed top-0 right-0 h-screen w-72 bg-white shadow-lg p-4 z-50 flex flex-col"
+        className="fixed top-0 right-0 mt-20 w-72 bg-white shadow-lg p-4 z-50 flex flex-col rounded-l-xl"
         initial={{ x: showTips ? 0 : 300 }}
         animate={{ x: showTips ? 0 : 300 }}
         transition={{ duration: 0.5 }}
@@ -59,7 +97,7 @@ const HomePage = () => {
       </motion.div>
 
       {/* Main Content: Vertical layout for pets */}
-      <div className="mt-20 max-w-md mx-auto">
+      <div className="mt-20 max-w-md ">
         <h2 className="text-2xl font-bold mb-4">Your Pets</h2>
         <div className="flex flex-col gap-4">
           {dummyPets.map((pet) => (
