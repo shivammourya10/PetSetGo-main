@@ -3,13 +3,14 @@ import fs from 'fs';  // Add the fs import
 import dotenv from "dotenv"
 
 dotenv.config({
-    path: "./.env"  // Add the path to your .env file
+    path: "../.env"  // Add the path to your .env file
 });
 cloudinary.config({ 
     cloud_name: process.env.CLOUDINARY_API_NAME,
     api_key: process.env.CLOUDINARY_API_KEY, 
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
+//console.log(process.env.CLOUDINARY_API_NAME, process.env.CLOUDINARY_API_KEY, process.env.CLOUDINARY_API_SECRET); // Debugging line to check if the environment variables are loaded correctly
 
 const uploadOnCloudinary = async(localFilePath)=>{
     try{
@@ -17,7 +18,7 @@ const uploadOnCloudinary = async(localFilePath)=>{
         const response = await cloudinary.uploader.upload(localFilePath, {
             resource_type: "auto",
             quality: "auto",
-            fetc_format: "auto",
+            fetch_format: "auto", // Fixed: was "fetc_format"
         })
         fs.unlinkSync(localFilePath);
         return response;

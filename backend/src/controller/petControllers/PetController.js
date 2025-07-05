@@ -102,7 +102,19 @@ const breedParser = zod.string();
 const ageParser = zod.number().min(0).max(99, { message: "Age must be 99 or below." });
 const weightParser = zod.number();
 const genderParser = zod.enum(['Male', 'Female']);
-const availableForBreedingParser = zod.enum(['true', 'false']);
+// const availableForBreedingParser = zod.boolean().transform(val => 
+//     typeof val === 'string' ? val === 'true' : val
+// ); // Better boolean handling
+
+
+const availableForBreedingParser = zod
+  .union([zod.string(), zod.boolean()])
+  .transform((val) => {
+    if (typeof val === 'string') {
+      return val.trim().toLowerCase() === 'true';
+    }
+    return Boolean(val);
+  });
 
 const petController = async (req, res) => {
     const { name, type, breed, age, weight, gender, availableForBreeding } = req.body;
@@ -122,6 +134,7 @@ const petController = async (req, res) => {
         weight: weightParser.safeParse(Number(weight)), // Convert to number for validation
         gender: genderParser.safeParse(gender),
         availableForBreeding: availableForBreedingParser.safeParse(availableForBreeding)
+        //
     };
 
     // Check if all fields are valid and send specific errors
@@ -164,11 +177,11 @@ const petController = async (req, res) => {
             PetName: name,
             PetType: type,
             Breed: breed,
-            Age: age,
-            Weight: weight,
+            Age: Number(age), // Ensure it's a number
+            Weight: Number(weight), // Ensure it's a number
             PicUrl: uploadedFile.url,
             Gender: gender,
-            AvailableForBreeding: availableForBreeding // Include this field in the pet entry
+            AvailableForBreeding: validations.availableForBreeding.data
         });
 
         // Save new pet to the database
@@ -184,10 +197,16 @@ const petController = async (req, res) => {
         user.Pets.push(newPet._id);
         await user.save();
 
-        return res.status(201).json({ message: "Pet created successfully", pet: newPet });
+        return res.status(201).json({ 
+            message: "Pet created successfully", 
+            pet: newPet 
+        });
     } catch (error) {
-        console.error('Error creating pet:', error); // Log the error for debugging
-        return res.status(500).json({ message: "Server error", error: error.message });
+        console.error('Error creating pet:', error);
+        return res.status(500).json({ 
+            message: "Server error", 
+            error: error.message 
+        });
     }
 };
 

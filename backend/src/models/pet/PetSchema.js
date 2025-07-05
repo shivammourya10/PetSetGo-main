@@ -32,7 +32,6 @@ required: true, // Weight in kilograms
 AvailableForBreeding: {
     type : Boolean,
     default: false,
-    required: optional,
 },
 Gender:{
     type: String,

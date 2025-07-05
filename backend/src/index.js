@@ -13,12 +13,15 @@ const app = express();
 // Middleware to parse JSON request bodies
 app.use(express.json());
 dotenv.config({
-    path: './.env'
+    path: '../.env',
+
 });
 app.use(bodyParser.urlencoded({ extended: true }));
+//console.log('Mongo URII:', process.env.MONGO_URI);
+
 const mongooseConnection = async ()=>{
     try{
-       await mongoose.connect(process.env.MONGO_URL);
+       await mongoose.connect(process.env.MONGO_URI);
         console.log('Connected to MongoDB');
     }
     catch(err){
@@ -27,11 +30,12 @@ const mongooseConnection = async ()=>{
 }
 mongooseConnection();
 app.use("/api/auth", authRoutes);
-app.use(communityRoutes);
-app.use(petRoutes);
-app.use(MedRouter);
-app.use(VetArticleRoute);
-app.use(petMateRoutes);
+app.use("/api/community", communityRoutes); // Added proper prefix
+app.use("/api/pets", petRoutes); // Added proper prefix
+app.use("/api/medical", MedRouter); // Added proper prefix
+app.use("/api/articles", VetArticleRoute); // Added proper prefix
+app.use("/api/petmate", petMateRoutes); // Added proper prefix
+
 app.listen(process.env.PORT,()=>{
     console.log('Server is running Now');
 });

@@ -6,7 +6,7 @@ const returnPets = async(req,res) => {
     const {userId} = req.params;
 
     const UserIdParser = isUserId.safeParse(userId);
-
+    //console.log("UserIdParser", UserIdParser);
     if(!UserIdParser.success){
         return res.status(400).json({ message: 'Invalid user id' });
     }
