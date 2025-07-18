@@ -1,80 +1,138 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FaEnvelope, FaLock, FaPaw } from "react-icons/fa";
+import { useAuth } from "../context/AuthContext.jsx";
+import InputField from "../components/InputField";
+import Button from "../components/Button";
+import Alert from "../components/Alert";
 
 const LoginPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login, isAuthenticated, error: authError } = useAuth();
+  
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect if user is already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      const from = location.state?.from?.pathname || '/home';
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, location]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    
     try {
-      const response = await axios.post("/api/auth/login", formData);
-      alert(response.data.message);
-      // Optionally, save the token and redirect the user
+      await login(formData);
+      // Auth context will handle redirection
     } catch (error) {
-      console.error("Error during login:", error);
-      alert("Login failed");
+      setError(error.response?.data?.message || "Login failed. Please check your credentials.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-100 to-purple-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-96">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+      <motion.div 
+        className="bg-white p-8 rounded-lg shadow-lg w-96"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="flex justify-center mb-6"
+        >
+          <FaPaw className="text-6xl text-blue-600" />
+        </motion.div>
+        
+        <motion.h2 
+          className="text-3xl font-bold text-center text-gray-800 mb-6"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
           Welcome Back!
-        </h2>
-        <p className="text-center text-gray-600 mb-8">
+        </motion.h2>
+        
+        <motion.p 
+          className="text-center text-gray-600 mb-8"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
           Please login to continue
-        </p>
+        </motion.p>
+        
+        {(error || authError) && (
+          <Alert 
+            type="error" 
+            message={error || authError} 
+            onClose={() => setError(null)} 
+          />
+        )}
+        
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              placeholder="Enter your email"
-              value={formData.email}
-              onChange={handleChange}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              placeholder="Enter your password"
-              value={formData.password}
-              onChange={handleChange}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-          <button
+          <InputField 
+            label="Email"
+            id="email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="Enter your email"
+            required
+            icon={<FaEnvelope className="text-gray-400" />}
+          />
+          
+          <InputField 
+            label="Password"
+            id="password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="Enter your password"
+            required
+            icon={<FaLock className="text-gray-400" />}
+          />
+          
+          <Button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            variant="primary"
+            className="w-full"
+            disabled={isLoading}
           >
-            Login
-          </button>
+            {isLoading ? 'Logging in...' : 'Login'}
+          </Button>
         </form>
-        <p className="mt-6 text-center text-gray-600">
-          Don't have an accountt?{" "}
-          <a href="/user/register" className="text-blue-600 hover:underline">
-            Register here
-          </a>
-        </p>
-      </div>
+        
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-600">
+            Don't have an account?{' '}
+            <Link to="/user/register" className="font-medium text-blue-600 hover:text-blue-500">
+              Register here
+            </Link>
+          </p>
+        </div>
+      </motion.div>
     </div>
   );
 };

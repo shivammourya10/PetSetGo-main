@@ -8,16 +8,21 @@ import petMateRoutes from "./routes/petMateRoutes.js"
 import VetArticleRoute from "./routes/VetArticleRoute.js"
 import bodyParser from 'body-parser';
 import dotenv from "dotenv";
+import cors from 'cors';
 
 const app = express();
 // Middleware to parse JSON request bodies
 app.use(express.json());
+// Enable CORS for all routes
+app.use(cors({
+    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    credentials: true
+}));
 dotenv.config({
-    path: '../.env',
-
+    path: './.env',
 });
 app.use(bodyParser.urlencoded({ extended: true }));
-//console.log('Mongo URII:', process.env.MONGO_URI);
+console.log('MongoDB URI:', process.env.MONGO_URI);
 
 const mongooseConnection = async ()=>{
     try{

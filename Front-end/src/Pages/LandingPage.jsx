@@ -2,6 +2,8 @@ import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext.jsx';
 import PixelCard from '../Blocks/Components/PixelCard/PixelCard';
 import SplashCursor from '../Blocks/Animations/SplashCursor/SplashCursor';
 import DecryptedText from '../Blocks/TextAnimations/DecryptedText/DecryptedText';
@@ -52,6 +54,8 @@ const ServiceDetails = {
 const LandingPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const openModal = (service) => {
     setSelectedService(service);
@@ -62,6 +66,17 @@ const LandingPage = () => {
 
   const scrollToServices = () => {
     servicesRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+  
+  // Handle the Get Started button click
+  const handleGetStarted = () => {
+    if (isAuthenticated) {
+      // If user is already logged in, navigate to home page
+      navigate('/home');
+    } else {
+      // If user is not logged in, navigate to login page
+      navigate('/user/login');
+    }
   };
 
   return (<div>
@@ -102,12 +117,13 @@ const LandingPage = () => {
           </motion.p>
 
           <motion.button
+            onClick={handleGetStarted}
             className="bg-pink-600 text-white py-3 px-8 rounded-lg shadow-lg text-lg font-semibold hover:bg-pink-700 transition duration-300"
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ duration: 1 }}
           >
-            Get Started
+            {isAuthenticated ? 'Go to Dashboard' : 'Get Started'}
           </motion.button>
         </div>
 
