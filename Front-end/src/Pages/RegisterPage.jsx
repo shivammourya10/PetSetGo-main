@@ -44,6 +44,12 @@ function RegisterPage() {
       setError("Passwords do not match");
       return;
     }
+
+    // Validate phone number
+    if (formData.phoneNo.length < 10 || formData.phoneNo.length > 14) {
+      setError("Phone number must be between 10 and 14 digits");
+      return;
+    }
     
     setIsLoading(true);
     
@@ -56,7 +62,11 @@ function RegisterPage() {
         password: formData.password,
       };
       
-      await register(userData);
+      console.log("Sending registration data:", { ...userData, password: "***" });
+      
+      const response = await register(userData);
+      console.log("Registration response:", response.data);
+      
       setSuccess(true);
       
       // Redirect to login after successful registration
@@ -65,13 +75,19 @@ function RegisterPage() {
       }, 2000);
       
     } catch (err) {
-      console.error("Registration error:", err.response?.data);
+      console.error("Registration error:", err);
+      console.error("Error response data:", err.response?.data);
+      
       if (err.response?.data?.errors && err.response.data.errors.length > 0) {
         // Handle specific field errors from the backend
-        const errorMessages = err.response.data.errors.map(error => error.msg).join(", ");
+        const errorMessages = err.response.data.errors.map(error => `${error.field || ''}: ${error.msg}`).join(", ");
         setError(errorMessages);
+      } else if (err.response?.data?.msg) {
+        setError(err.response.data.msg);
+      } else if (!err.response) {
+        setError("Network error. Please check if the server is running.");
       } else {
-        setError(err.response?.data?.message || "Registration failed. Please try again.");
+        setError("Registration failed. Please try again.");
       }
     } finally {
       setIsLoading(false);
@@ -165,8 +181,11 @@ function RegisterPage() {
             type="tel"
             value={formData.phoneNo}
             onChange={handleChange}
-            placeholder="Enter your phone number"
+            placeholder="Enter your phone number (10-14 digits)"
             required
+            minLength="10"
+            maxLength="14"
+            pattern="[0-9]{10,14}"
             icon={<FaEnvelope className="text-gray-400" />}
           />
           

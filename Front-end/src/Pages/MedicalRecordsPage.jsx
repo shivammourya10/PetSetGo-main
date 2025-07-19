@@ -23,7 +23,7 @@ const MedicalRecordsPage = () => {
       
       try {
         // In a real app, we would fetch the user's pets
-        // const petsResponse = await PetService.getUserPets(user.id);
+        // const petsResponse = await PetService.getUserPets();
         // const pets = petsResponse.data;
         
         // Use dummy data for now

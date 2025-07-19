@@ -1,24 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaPlus, FaSearch, FaComments, FaUser, FaClock } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaComments, FaUser, FaClock, FaFilter } from 'react-icons/fa';
 import Layout from '../components/Layout';
 import Card, { CardBody, CardHeader } from '../components/Card';
 import Button from '../components/Button';
 import ForumService from '../services/ForumService';
+import { useAuth } from '../context/AuthContext';
 
 const ForumPage = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [topics, setTopics] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   useEffect(() => {
     const fetchTopics = async () => {
       try {
-        const response = await ForumService.getTopics();
+        // Get all topics or filter by category if selected
+        const filters = selectedCategory !== 'all' ? { category: selectedCategory } : {};
+        const response = await ForumService.getTopics(filters);
         setTopics(response.data);
         
         // Extract unique categories
@@ -31,60 +37,60 @@ const ForumPage = () => {
         // Fallback dummy data
         const dummyTopics = [
           {
-            id: 1,
+            _id: '1',
             title: 'Tips for training a new puppy',
             content: 'I just got a new Labrador puppy. Any training tips?',
             category: 'Dogs',
             author: {
-              id: 101,
+              _id: '101',
               name: 'John Doe'
             },
             createdAt: '2025-07-15T10:30:00Z',
             replyCount: 5
           },
           {
-            id: 2,
+            _id: '2',
             title: 'Best food for cats with sensitive stomachs',
             content: 'My cat has been having digestive issues lately...',
             category: 'Cats',
             author: {
-              id: 102,
+              _id: '102',
               name: 'Jane Smith'
             },
             createdAt: '2025-07-14T16:45:00Z',
             replyCount: 8
           },
           {
-            id: 3,
+            _id: '3',
             title: 'Proper habitat setup for bearded dragons',
             content: 'I\'m thinking about getting a bearded dragon as a pet...',
             category: 'Reptiles',
             author: {
-              id: 103,
+              _id: '103',
               name: 'Alex Johnson'
             },
             createdAt: '2025-07-13T09:15:00Z',
             replyCount: 3
           },
           {
-            id: 4,
+            _id: '4',
             title: 'Dealing with dog anxiety during thunderstorms',
             content: 'My Golden Retriever gets really anxious during thunderstorms...',
             category: 'Dogs',
             author: {
-              id: 104,
+              _id: '104',
               name: 'Sarah Williams'
             },
             createdAt: '2025-07-12T22:00:00Z',
             replyCount: 12
           },
           {
-            id: 5,
+            _id: '5',
             title: 'Bird toy recommendations',
             content: 'Looking for toy recommendations for my parakeet...',
             category: 'Birds',
             author: {
-              id: 105,
+              _id: '105',
               name: 'Michael Brown'
             },
             createdAt: '2025-07-11T14:20:00Z',

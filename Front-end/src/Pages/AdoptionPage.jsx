@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FaSearch, FaPaw, FaHeart, FaFilter, FaMapMarkerAlt } from "react-icons/fa";
+import { FaSearch, FaPaw, FaHeart, FaFilter, FaMapMarkerAlt, FaPlus } from "react-icons/fa";
 import Layout from "../components/Layout";
 import Card from "../components/Card";
 import Button from "../components/Button";
 import InputField from "../components/InputField";
 import Alert from "../components/Alert";
+import AdoptionService from "../services/AdoptionService";
+import { useAuth } from "../context/AuthContext";
 
 const AdoptionPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [pets, setPets] = useState([]);
   const [error, setError] = useState(null);
@@ -27,10 +30,15 @@ const AdoptionPage = () => {
     const fetchPets = async () => {
       try {
         setIsLoading(true);
-        // Replace with actual API call
-        // const response = await AdoptionService.getPets();
+        // Make API call to get pets available for adoption
+        const response = await AdoptionService.getAdoptionPets();
+        setPets(response.data);
+        setIsLoading(false);
+      } catch (err) {
+        console.error("Error fetching adoption pets:", err);
+        setError("Failed to load adoption listings. Please try again.");
         
-        // Dummy data for demonstration
+        // Dummy data for demonstration if API fails
         const dummyPets = [
           {
             _id: "1",
@@ -108,10 +116,6 @@ const AdoptionPage = () => {
         
         setPets(dummyPets);
         setIsLoading(false);
-      } catch (err) {
-        setError("Failed to load adoption listings. Please try again.");
-        console.error("Error fetching adoption pets:", err);
-        setIsLoading(false);
       }
     };
 
@@ -184,12 +188,22 @@ const AdoptionPage = () => {
           <h1 className="text-3xl font-bold text-purple-700 flex-grow">
             Adopt a Pet
           </h1>
-          <Button
-            variant="secondary"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <FaFilter className="mr-2" /> Filters
-          </Button>
+          <div className="flex space-x-3">
+            {user && (
+              <Button
+                variant="primary"
+                onClick={() => navigate('/adoption/list')}
+              >
+                <FaPlus className="mr-2" /> List Pet
+              </Button>
+            )}
+            <Button
+              variant="secondary"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <FaFilter className="mr-2" /> Filters
+            </Button>
+          </div>
         </motion.div>
 
         {error && (

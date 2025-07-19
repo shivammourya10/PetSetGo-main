@@ -22,13 +22,14 @@ import AddMedicalRecordPage from './Pages/AddMedicalRecordPage.jsx';
 import VetArticlesPage from './Pages/VetArticlesPage.jsx';
 import AdoptionPage from './Pages/AdoptionPage.jsx';
 import AdoptionRequestPage from './Pages/AdoptionRequestPage.jsx';
+import ListPetPage from './Pages/ListPetPage.jsx';
 import NotFoundPage from './Pages/NotFoundPage.jsx';
 
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
-    <AuthProvider>
-      <AnimatePresence mode="wait">
-        <Routes>
+      <AuthProvider>
+        <AnimatePresence mode="wait">
+          <Routes>
           <Route path="/" element={<App />} />
           <Route path="/user/login" element={<LoginPage />} />
           <Route path="/user/register" element={<RegisterPage />} />
@@ -48,6 +49,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/articles" element={<PrivateRoute><VetArticlesPage /></PrivateRoute>} />
           <Route path="/adoption" element={<PrivateRoute><AdoptionPage /></PrivateRoute>} />
           <Route path="/adoption/request/:petId" element={<PrivateRoute><AdoptionRequestPage /></PrivateRoute>} />
+          <Route path="/adoption/list" element={<PrivateRoute><ListPetPage /></PrivateRoute>} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </AnimatePresence>

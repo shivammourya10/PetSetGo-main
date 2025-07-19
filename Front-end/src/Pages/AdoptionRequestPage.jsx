@@ -6,6 +6,7 @@ import Layout from "../components/Layout";
 import InputField from "../components/InputField";
 import Button from "../components/Button";
 import Alert from "../components/Alert";
+import AdoptionService from "../services/AdoptionService";
 
 const AdoptionRequestPage = () => {
   const { petId } = useParams();
@@ -39,10 +40,14 @@ const AdoptionRequestPage = () => {
     const fetchPet = async () => {
       try {
         setIsLoading(true);
-        // In a real app, this would be an API call
-        // const response = await AdoptionService.getPet(petId);
+        // Make API call to get pet details
+        const response = await AdoptionService.getAdoptionPet(petId);
+        setPet(response.data);
+      } catch (err) {
+        console.error("Error fetching pet:", err);
+        setError("Failed to load pet details. Please try again.");
         
-        // For now, using dummy data
+        // Fallback to dummy data if API fails
         setPet({
           _id: petId,
           name: "Buddy",
@@ -52,9 +57,6 @@ const AdoptionRequestPage = () => {
           gender: "male",
           image: "https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
         });
-      } catch (err) {
-        setError("Failed to load pet details. Please try again.");
-        console.error("Error fetching pet:", err);
       } finally {
         setIsLoading(false);
       }
@@ -86,11 +88,8 @@ const AdoptionRequestPage = () => {
     setError(null);
     
     try {
-      // In a real app, this would be an API call
-      // await AdoptionService.submitApplication(petId, formData);
-      
-      // Simulate API call with timeout
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Make API call to submit adoption request
+      await AdoptionService.submitAdoptionRequest(petId, formData);
       
       setSuccess("Your adoption request has been submitted successfully! Our team will review your application and contact you soon.");
       
@@ -100,7 +99,7 @@ const AdoptionRequestPage = () => {
       }, 3000);
       
     } catch (err) {
-      setError("Failed to submit adoption request. Please try again.");
+      setError(err.response?.data?.message || "Failed to submit adoption request. Please try again.");
       console.error("Error submitting adoption request:", err);
     } finally {
       setIsSubmitting(false);

@@ -1,35 +1,59 @@
 import api from './api';
 
-// Adoption services
+// Rescue and Adoption services
 const AdoptionService = {
   // Get all pets available for adoption
   getAdoptionPets: () => {
-    return api.get('/api/adoption/pets');
+    // Based on the backend API routes, this would fetch pets for adoption
+    return api.get('/api/pets/rescueAndAdoption');
   },
 
   // Get single adoption pet details
   getAdoptionPet: (petId) => {
-    return api.get(`/api/adoption/pets/${petId}`);
+    return api.get(`/api/pets/rescueAndAdoption/${petId}`);
   },
 
   // Submit adoption application
-  submitAdoptionRequest: (data) => {
-    return api.post('/api/adoption/request', data);
+  submitAdoptionRequest: (petId, requestData) => {
+    return api.post(`/api/pets/adoption/request/${petId}`, requestData);
   },
 
   // Get user's adoption applications
   getUserApplications: () => {
-    return api.get('/api/adoption/applications');
+    return api.get('/api/pets/adoption/requests');
   },
 
   // Get specific adoption application
   getApplication: (applicationId) => {
-    return api.get(`/api/adoption/applications/${applicationId}`);
+    return api.get(`/api/pets/adoption/requests/${applicationId}`);
   },
   
-  // List a pet for adoption
-  listPetForAdoption: (petData) => {
-    return api.post('/api/adoption/list', petData);
+  // List a pet for adoption or rescue
+  listPetForAdoption: (petData, file) => {
+    const formData = new FormData();
+    
+    // Add required fields based on the backend model
+    // Backend expects: typeOfHelp, description, and a file
+    formData.append('type', petData.type || 'Adoption'); // 'Rescue' or 'Adoption'
+    formData.append('description', petData.description);
+    
+    // Add additional pet data
+    Object.keys(petData).forEach(key => {
+      if (key !== 'type' && key !== 'description') {
+        formData.append(key, petData[key]);
+      }
+    });
+    
+    // Add file if exists
+    if (file) {
+      formData.append('file', file);
+    }
+    
+    return api.post('/api/pets/rescueAndAdoption', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
   }
 };
 

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FaPaw, FaEdit, FaTrash, FaArrowLeft } from "react-icons/fa";
+import { FaPaw, FaEdit, FaTrash, FaArrowLeft, FaStethoscope, FaHeartbeat } from "react-icons/fa";
 import PetService from "../services/PetService";
+import MedicalService from "../services/MedicalService";
+import { useAuth } from "../context/AuthContext";
 import Layout from "../components/Layout";
 import Button from "../components/Button";
 import Alert from "../components/Alert";
@@ -10,25 +12,70 @@ import Alert from "../components/Alert";
 const PetDetailPage = () => {
   const { petId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [pet, setPet] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [medicalRecords, setMedicalRecords] = useState([]);
+  const [isBreedingEnabled, setIsBreedingEnabled] = useState(false);
+  const [isLoading, setIsLoading] = useState({
+    pet: true,
+    medical: true
+  });
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchPet = async () => {
       try {
-        setIsLoading(true);
+        setIsLoading(prev => ({ ...prev, pet: true }));
+        // We're using a different endpoint for detailed pet info
         const response = await PetService.getPet(petId);
         setPet(response.data);
+        // Set breeding status from pet data
+        setIsBreedingEnabled(response.data?.breedingStatus === 'available');
       } catch (err) {
         setError("Failed to load pet details. Please try again.");
         console.error("Error fetching pet:", err);
+        
+        // For development, provide sample data if API fails
+        setPet({
+          _id: petId,
+          name: "Sample Pet",
+          breed: "Sample Breed",
+          age: "2",
+          gender: "Male",
+          weight: "10",
+          description: "This is a sample pet description.",
+          breedingStatus: "unavailable"
+        });
       } finally {
-        setIsLoading(false);
+        setIsLoading(prev => ({ ...prev, pet: false }));
+      }
+    };
+    
+    const fetchMedicalRecords = async () => {
+      try {
+        setIsLoading(prev => ({ ...prev, medical: true }));
+        const response = await MedicalService.getMedicalRecords(petId);
+        setMedicalRecords(response.data);
+      } catch (err) {
+        console.error("Error fetching medical records:", err);
+        // For development, provide sample data if API fails
+        setMedicalRecords([
+          {
+            _id: "med1",
+            date: "2023-06-15",
+            description: "Annual checkup",
+            prescription: "Flea treatment"
+          }
+        ]);
+      } finally {
+        setIsLoading(prev => ({ ...prev, medical: false }));
       }
     };
 
-    fetchPet();
+    if (petId) {
+      fetchPet();
+      fetchMedicalRecords();
+    }
   }, [petId]);
 
   const handleDelete = async () => {
@@ -43,7 +90,19 @@ const PetDetailPage = () => {
     }
   };
 
-  if (isLoading) {
+  // Handle breeding status toggle
+  const handleBreedingStatusToggle = async () => {
+    try {
+      const newStatus = isBreedingEnabled ? 'unavailable' : 'available';
+      await PetService.updateBreedingStatus(petId, newStatus);
+      setIsBreedingEnabled(!isBreedingEnabled);
+    } catch (err) {
+      setError("Failed to update breeding status. Please try again.");
+      console.error("Error updating breeding status:", err);
+    }
+  };
+
+  if (isLoading.pet) {
     return (
       <Layout>
         <div className="flex justify-center items-center h-64">
@@ -151,24 +210,109 @@ const PetDetailPage = () => {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <motion.div
-            whileHover={{ scale: 1.01 }}
-            className="bg-white rounded-lg shadow p-6"
-            onClick={() => navigate(`/medical-records/${petId}`)}
-          >
-            <h2 className="text-xl font-bold text-purple-700 mb-2">Medical Records</h2>
-            <p className="text-gray-600">View and manage medical history</p>
-          </motion.div>
+        {/* Medical Records Section */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center">
+              <FaStethoscope className="text-purple-600 mr-2" size={24} />
+              <h2 className="text-2xl font-bold text-purple-700">Medical Records</h2>
+            </div>
+            <Button 
+              onClick={() => navigate(`/medical/add?petId=${petId}`)}
+              variant="primary"
+            >
+              Add Record
+            </Button>
+          </div>
 
-          <motion.div
-            whileHover={{ scale: 1.01 }}
-            className="bg-white rounded-lg shadow p-6"
-            onClick={() => navigate(`/breeding/${petId}`)}
-          >
-            <h2 className="text-xl font-bold text-purple-700 mb-2">Breeding Profile</h2>
-            <p className="text-gray-600">View breeding information and potential matches</p>
-          </motion.div>
+          {isLoading.medical ? (
+            <div className="flex justify-center py-6">
+              <div className="animate-spin h-8 w-8 border-4 border-purple-500 rounded-full border-t-transparent"></div>
+            </div>
+          ) : medicalRecords.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Description
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Prescription
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {medicalRecords.map((record) => (
+                    <tr key={record._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {new Date(record.date).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4">
+                        {record.description}
+                      </td>
+                      <td className="px-6 py-4">
+                        {record.prescription}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-6 text-gray-500">
+              No medical records found. Add your pet's first medical record.
+            </div>
+          )}
+        </div>
+
+        {/* Breeding Section */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center">
+              <FaHeartbeat className="text-pink-600 mr-2" size={24} />
+              <h2 className="text-2xl font-bold text-purple-700">Breeding Status</h2>
+            </div>
+            <div className="flex items-center">
+              <span className="mr-3 text-sm">
+                {isBreedingEnabled ? 'Available for breeding' : 'Not available for breeding'}
+              </span>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  value="" 
+                  className="sr-only peer" 
+                  checked={isBreedingEnabled}
+                  onChange={handleBreedingStatusToggle}
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+              </label>
+            </div>
+          </div>
+          
+          <div className="mt-4">
+            {isBreedingEnabled ? (
+              <div className="space-y-4">
+                <p className="text-gray-700">
+                  Your pet is currently listed as available for breeding. Other pet owners can send you breeding requests.
+                </p>
+                <Button 
+                  onClick={() => navigate('/breeding/explore')}
+                  variant="secondary"
+                  className="mt-2"
+                >
+                  Find Breeding Matches
+                </Button>
+              </div>
+            ) : (
+              <p className="text-gray-700">
+                Your pet is not available for breeding. Toggle the switch above to make your pet available for breeding requests.
+              </p>
+            )}
+          </div>
         </div>
       </motion.div>
     </Layout>

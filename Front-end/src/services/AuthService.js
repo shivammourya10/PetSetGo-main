@@ -1,5 +1,8 @@
 import api from './api';
 
+// Log the base URL to help debug connectivity issues
+console.log("API is configured with baseURL:", api.defaults.baseURL);
+
 // Authentication services
 const AuthService = {
   // Register a new user

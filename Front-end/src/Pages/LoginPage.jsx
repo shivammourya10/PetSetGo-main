@@ -17,8 +17,25 @@ const LoginPage = () => {
     password: "",
   });
   const [error, setError] = useState(null);
+  const [message, setMessage] = useState(location.state?.message || null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Check for URL parameters on load
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const messageParam = params.get('message');
+    const redirectParam = params.get('redirect');
+    
+    if (messageParam) {
+      setMessage(decodeURIComponent(messageParam));
+    }
+    
+    // Store redirect path if present
+    if (redirectParam) {
+      location.state = { ...location.state, from: { pathname: decodeURIComponent(redirectParam) } };
+    }
+  }, [location.search]);
+  
   // Redirect if user is already authenticated
   useEffect(() => {
     if (isAuthenticated) {
@@ -86,6 +103,14 @@ const LoginPage = () => {
             type="error" 
             message={error || authError} 
             onClose={() => setError(null)} 
+          />
+        )}
+        
+        {message && (
+          <Alert 
+            type="info" 
+            message={message} 
+            onClose={() => setMessage(null)} 
           />
         )}
         

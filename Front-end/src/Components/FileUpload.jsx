@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { FaUpload, FaImage } from 'react-icons/fa';
 import Button from './Button';
 
-const FileUpload = ({ onFileSelect, label = 'Upload file', accept = 'image/*' }) => {
+const FileUpload = ({ onFileSelect, label = 'Upload file', accept = 'image/*', placeholderIcon, placeholderText }) => {
   const fileInputRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [fileName, setFileName] = useState(null);
@@ -12,7 +12,6 @@ const FileUpload = ({ onFileSelect, label = 'Upload file', accept = 'image/*' })
     const file = e.target.files[0];
     if (file) {
       setFileName(file.name);
-      onFileSelect(file);
       
       // Create preview for images
       if (file.type.startsWith('image/')) {
@@ -23,6 +22,14 @@ const FileUpload = ({ onFileSelect, label = 'Upload file', accept = 'image/*' })
         reader.readAsDataURL(file);
       } else {
         setPreviewUrl(null);
+      }
+      
+      // Pass the file to the parent component
+      if (typeof onFileSelect === 'function') {
+        console.log("FileUpload passing file to parent:", file.name);
+        onFileSelect(file);
+      } else {
+        console.error("onFileSelect is not a function");
       }
     }
   };
@@ -47,7 +54,7 @@ const FileUpload = ({ onFileSelect, label = 'Upload file', accept = 'image/*' })
               className="mx-auto h-12 w-12 text-gray-400"
               whileHover={{ rotate: 10, scale: 1.1 }}
             >
-              <FaImage className="h-12 w-12" />
+              {placeholderIcon || <FaImage className="h-12 w-12" />}
             </motion.div>
           )}
           

@@ -20,7 +20,7 @@ const PetsPage = () => {
       if (!user) return;
       
       try {
-        const response = await PetService.getUserPets(user.id);
+        const response = await PetService.getUserPets();
         setPets(response.data);
       } catch (err) {
         console.error('Error fetching pets:', err);

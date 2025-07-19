@@ -16,7 +16,28 @@ export const AuthProvider = ({ children }) => {
     const userData = localStorage.getItem('user');
     
     if (token && userData) {
-      setUser(JSON.parse(userData));
+      try {
+        const parsedUser = JSON.parse(userData);
+        
+        // Verify we have a valid user with MongoDB ObjectId
+        if (parsedUser && parsedUser._id && parsedUser._id.match(/^[0-9a-fA-F]{24}$/)) {
+          // We have a valid MongoDB ObjectId
+          setUser(parsedUser);
+        } else {
+          // Invalid user data - clear everything
+          console.warn('Invalid user data found in localStorage');
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Error parsing user data from localStorage:', error);
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        setUser(null);
+      }
+    } else {
+      setUser(null);
     }
     setLoading(false);
   }, []);
@@ -25,30 +46,26 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       setLoading(true);
-      // Try to connect to the backend
-      try {
-        const response = await AuthService.login(credentials);
-        const { user, token } = response.data;
-        
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
-        
-        setUser(user);
-        setError(null);
-        return user;
-      } catch (apiErr) {
-        console.error("Backend connection error:", apiErr);
-        // For testing purposes, create a mock user when backend is unavailable
-        const mockUser = {
-          _id: '123',
-          name: 'Test User',
-          email: credentials.email || 'test@example.com'
-        };
-        localStorage.setItem('token', 'mock-token-for-testing');
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        setUser(mockUser);
-        return mockUser;
+      const response = await AuthService.login(credentials);
+      
+      // Validate the response data
+      if (!response.data || !response.data.user || !response.data.token) {
+        throw new Error('Invalid response from server');
       }
+
+      const { user, token } = response.data;
+      
+      // Ensure we have a valid user with MongoDB ObjectId
+      if (!user._id || !user._id.match(/^[0-9a-fA-F]{24}$/)) {
+        throw new Error('Invalid user ID from server');
+      }
+
+      // Store the complete user data and token
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      setUser(user);
+      setError(null);
+      return user;
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
       throw err;

@@ -117,12 +117,33 @@ const availableForBreedingParser = zod
   });
 
 const petController = async (req, res) => {
+    // Set CORS headers immediately to address potential cross-origin issues
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    // Add connection diagnostic headers
+    res.header('X-API-Status', 'available');
+    res.header('X-API-Time', new Date().toISOString());
+    
+    console.log('Pet creation request received:', {
+        body: req.body ? 'Present' : 'Missing',
+        file: req.file ? `${req.file.originalname} (${req.file.size} bytes)` : 'No file',
+        params: req.params
+    });
+    
     const { name, type, breed, age, weight, gender, availableForBreeding } = req.body;
     const { userId } = req.params;
 
     // Validate userId
     if (!userId) {
-        return res.status(401).json({ message: "User ID is required" });
+        return res.status(401).json({ 
+            message: "User ID is required",
+            connectionInfo: {
+                serverTime: new Date().toISOString(),
+                serverAvailable: true
+            }
+        });
     }
 
     // Parse and validate fields
@@ -160,16 +181,45 @@ const petController = async (req, res) => {
         return res.status(400).json({ field: "availableForBreeding", msg: validations.availableForBreeding.error.issues[0].message });
     }
 
-    // Check for uploaded file
+    // Check for uploaded file with detailed response for debugging
     if (!req.file) {
-        return res.status(400).json({ message: "No image uploaded" });
+        console.error('File upload failed - req.file is missing');
+        return res.status(400).json({ 
+            message: "No image uploaded", 
+            details: "The file was not received by the server",
+            connectionInfo: {
+                headers: req.headers['content-type'] || 'No content-type header',
+                bodySize: req.headers['content-length'] || 'Unknown size',
+                serverTime: new Date().toISOString(),
+                formDataReceived: !!req.body,
+                requestType: req.method
+            }
+        });
+    }
+    
+    // Validate the file format
+    if (!req.file.mimetype.startsWith('image/')) {
+        return res.status(400).json({ 
+            message: "Invalid file type", 
+            details: `Received file of type ${req.file.mimetype}, but an image is required`
+        });
     }
 
     try {
-        // Upload the pet's picture to Cloudinary
-        const uploadedFile = await uploadOnCloudinary(req.file.path);
+        // Set a timeout for the Cloudinary upload to prevent long-hanging requests
+        const uploadPromise = uploadOnCloudinary(req.file.path);
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Upload timed out after 15 seconds')), 15000)
+        );
+        
+        // Upload the pet's picture to Cloudinary with timeout
+        const uploadedFile = await Promise.race([uploadPromise, timeoutPromise]);
+        
         if (!uploadedFile) {
-            return res.status(500).json({ message: "Failed to upload image on Cloudinary" });
+            return res.status(500).json({ 
+                message: "Failed to upload image on Cloudinary",
+                details: "The upload service may be unavailable"
+            });
         }
 
         // Create new pet entry
@@ -197,15 +247,50 @@ const petController = async (req, res) => {
         user.Pets.push(newPet._id);
         await user.save();
 
+        // Send CORS headers to ensure frontend can receive the response
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        
         return res.status(201).json({ 
             message: "Pet created successfully", 
-            pet: newPet 
+            pet: newPet,
+            serverTime: new Date().toISOString() // Add server time for diagnosing time-related issues
         });
     } catch (error) {
         console.error('Error creating pet:', error);
-        return res.status(500).json({ 
-            message: "Server error", 
-            error: error.message 
+        
+        // Categorize different types of errors for better client-side handling
+        let statusCode = 500;
+        let errorMessage = "Server error";
+        let errorDetails = error.message;
+        
+        if (error.name === 'MongoNetworkError' || error.name === 'MongoTimeoutError') {
+            statusCode = 503;
+            errorMessage = "Database connection error";
+            errorDetails = "Cannot connect to the database. Please try again later.";
+        } else if (error.message.includes('timed out')) {
+            statusCode = 504;
+            errorMessage = "Request timed out";
+            errorDetails = "The upload process took too long. Please check your network connection and try again.";
+        } else if (error.name === 'ValidationError') {
+            statusCode = 400;
+            errorMessage = "Validation error";
+            errorDetails = Object.values(error.errors).map(e => e.message).join(', ');
+        }
+        
+        // Send CORS headers to ensure frontend can receive the error
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        
+        return res.status(statusCode).json({ 
+            message: errorMessage, 
+            error: errorDetails,
+            connectionInfo: {
+                serverTime: new Date().toISOString(),
+                serverAvailable: true
+            }
         });
     }
 };
