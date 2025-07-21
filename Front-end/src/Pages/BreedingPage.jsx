@@ -1,276 +1,387 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FaSearch, FaPaw, FaHeart, FaArrowRight } from "react-icons/fa";
+import { FaSearch, FaPaw, FaHeart, FaArrowRight, FaFilter, FaMapMarkerAlt, FaBirthdayCake, FaVenus, FaMars } from "react-icons/fa";
 import Layout from "../components/Layout";
 import Card from "../components/Card";
 import Button from "../components/Button";
 import InputField from "../components/InputField";
 import Alert from "../components/Alert";
+import PetMatchModal from "../Components/PetMatchModal";
+import AdvancedSearchModal from "../Components/AdvancedSearchModal";
 import BreedingService from "../services/BreedingService";
 
 const BreedingPage = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [pets, setPets] = useState([]);
-  const [matches, setMatches] = useState([]);
+  const [filteredPets, setFilteredPets] = useState([]);
+  const [myPets, setMyPets] = useState([]);
   const [selectedPet, setSelectedPet] = useState(null);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showMatchModal, setShowMatchModal] = useState(false);
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [selectedMatchPet, setSelectedMatchPet] = useState(null);
+  const [sendingRequest, setSendingRequest] = useState(false);
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { 
+        duration: 0.5,
+        staggerChildren: 0.1
+      } 
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1 }
+  };
 
   useEffect(() => {
-    const fetchPets = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        const response = await BreedingService.getBreedingPets();
-        setPets(response.data);
+        
+        // Fetch available pets for breeding
+        const response = await BreedingService.getAvailablePets();
+        const availablePets = response.data.pets || [];
+        
+        // Add mock compatibility scores and enhanced data
+        const enhancedPets = availablePets.map(pet => ({
+          ...pet,
+          image: pet.image || `https://source.unsplash.com/400x300/?${pet.species || 'pet'}`,
+          compatibility: {
+            score: Math.floor(Math.random() * 40) + 60, // 60-100%
+            factors: generateCompatibilityFactors(pet)
+          },
+          location: pet.location || 'Location not specified',
+          description: pet.description || `Meet ${pet.name}, a wonderful ${pet.breed} looking for a breeding companion!`
+        }));
+        
+        setPets(enhancedPets);
+        setFilteredPets(enhancedPets);
+        
       } catch (err) {
         setError("Failed to load pets. Please try again.");
         console.error("Error fetching breeding pets:", err);
+        
+        // No fallback data - only show real pets from database
+        setPets([]);
+        setFilteredPets([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchPets();
+    fetchData();
   }, []);
 
-  const handleFindMatches = async (pet) => {
-    try {
-      setSelectedPet(pet);
-      setIsLoading(true);
-      const response = await BreedingService.findMatches(pet._id);
-      setMatches(response.data);
-    } catch (err) {
-      setError("Failed to find matches. Please try again.");
-      console.error("Error finding matches:", err);
-    } finally {
-      setIsLoading(false);
-    }
+  const generateCompatibilityFactors = (pet) => {
+    const factors = [];
+    if (pet.breed) factors.push(`${pet.breed} breed`);
+    if (pet.age && pet.age >= 2 && pet.age <= 5) factors.push('Ideal breeding age');
+    if (pet.vaccinated) factors.push('Fully vaccinated');
+    if (pet.healthChecked) factors.push('Health verified');
+    factors.push('Good temperament');
+    factors.push('Same species');
+    return factors.slice(0, 4); // Limit to 4 factors
   };
 
-  const handleCreateBreedingRequest = async (matchId) => {
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setFilteredPets(pets);
+      return;
+    }
+    
+    const filtered = pets.filter(pet =>
+      pet.name.toLowerCase().includes(query.toLowerCase()) ||
+      pet.breed.toLowerCase().includes(query.toLowerCase()) ||
+      pet.species.toLowerCase().includes(query.toLowerCase()) ||
+      pet.location.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredPets(filtered);
+  };
+
+  const handleAdvancedSearch = (filters) => {
+    let filtered = [...pets];
+
+    // Apply filters
+    if (filters.species) {
+      filtered = filtered.filter(pet => 
+        pet.species.toLowerCase() === filters.species.toLowerCase()
+      );
+    }
+    
+    if (filters.breed) {
+      filtered = filtered.filter(pet =>
+        pet.breed.toLowerCase().includes(filters.breed.toLowerCase())
+      );
+    }
+    
+    if (filters.gender) {
+      filtered = filtered.filter(pet =>
+        pet.gender.toLowerCase() === filters.gender.toLowerCase()
+      );
+    }
+    
+    if (filters.age.min) {
+      filtered = filtered.filter(pet => pet.age >= parseInt(filters.age.min));
+    }
+    
+    if (filters.age.max) {
+      filtered = filtered.filter(pet => pet.age <= parseInt(filters.age.max));
+    }
+    
+    if (filters.location) {
+      filtered = filtered.filter(pet =>
+        pet.location.toLowerCase().includes(filters.location.toLowerCase())
+      );
+    }
+
+    setFilteredPets(filtered);
+  };
+
+  const handleViewMatch = (pet) => {
+    setSelectedMatchPet(pet);
+    setShowMatchModal(true);
+  };
+
+  const handleSendBreedingRequest = async (petId, message) => {
     try {
-      await BreedingService.createBreedingRequest({
-        petId: selectedPet._id,
-        matchId: matchId
-      });
+      setSendingRequest(true);
       
-      // Show success notification (could use a toast component here)
-      alert("Breeding request sent successfully!");
+      // TODO: Implement with actual user's pet selection
+      const userPetId = myPets[0]?.id || 'mock-pet-id';
+      
+      await BreedingService.requestBreeding(userPetId, petId);
+      setSuccess("Breeding request sent successfully!");
+      setShowMatchModal(false);
       
     } catch (err) {
       setError("Failed to send breeding request. Please try again.");
-      console.error("Error creating breeding request:", err);
+      console.error("Error sending breeding request:", err);
+    } finally {
+      setSendingRequest(false);
     }
   };
-
-  const filteredPets = pets.filter(pet => 
-    pet.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    pet.breed.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <Layout>
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.3 }}
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
         className="container mx-auto p-4"
       >
-        <div className="flex items-center mb-6">
-          <h1 className="text-3xl font-bold text-purple-700 flex-grow">
+        {/* Header */}
+        <motion.div variants={itemVariants} className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-purple-700 flex items-center">
+            <FaHeart className="mr-3 text-red-500" />
             Pet Breeding
           </h1>
-        </div>
+          <Button
+            variant="primary"
+            onClick={() => navigate('/pets/add')}
+            icon={<FaPaw />}
+          >
+            Add Your Pet
+          </Button>
+        </motion.div>
 
-        {error && <Alert type="error" message={error} />}
+        {/* Alerts */}
+        {error && (
+          <motion.div variants={itemVariants}>
+            <Alert type="error" message={error} onClose={() => setError(null)} />
+          </motion.div>
+        )}
+        
+        {success && (
+          <motion.div variants={itemVariants}>
+            <Alert type="success" message={success} onClose={() => setSuccess(null)} />
+          </motion.div>
+        )}
 
-        <div className="mb-6">
-          <InputField
-            id="search"
-            name="search"
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search pets by name or breed"
-            icon={<FaSearch />}
-          />
-        </div>
-
-        {isLoading && !selectedPet ? (
-          <div className="flex justify-center items-center h-64">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              className="text-4xl text-purple-600"
+        {/* Search Section */}
+        <motion.div variants={itemVariants} className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <InputField
+                placeholder="Search by pet name, breed, species, or location..."
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                icon={<FaSearch />}
+              />
+            </div>
+            <Button
+              variant="secondary"
+              onClick={() => setShowAdvancedSearch(true)}
+              icon={<FaFilter />}
             >
-              <FaPaw />
-            </motion.div>
+              Advanced Search
+            </Button>
           </div>
-        ) : selectedPet ? (
-          <div>
-            <div className="flex items-center mb-6">
+        </motion.div>
+
+        {/* Stats */}
+        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card className="text-center p-6">
+            <div className="text-3xl font-bold text-purple-600">{filteredPets.length}</div>
+            <div className="text-gray-600">Available Pets</div>
+          </Card>
+          <Card className="text-center p-6">
+            <div className="text-3xl font-bold text-green-600">
+              {filteredPets.filter(p => p.compatibility?.score >= 90).length}
+            </div>
+            <div className="text-gray-600">High Compatibility</div>
+          </Card>
+          <Card className="text-center p-6">
+            <div className="text-3xl font-bold text-blue-600">
+              {filteredPets.filter(p => p.healthChecked && p.vaccinated).length}
+            </div>
+            <div className="text-gray-600">Health Verified</div>
+          </Card>
+        </motion.div>
+
+        {/* Pet Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-lg p-6 animate-pulse">
+                <div className="w-full h-48 bg-gray-300 rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-300 rounded mb-2"></div>
+                <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <motion.div 
+            variants={containerVariants}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            {filteredPets.map((pet) => (
+              <motion.div key={pet.id} variants={itemVariants}>
+                <Card className="overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                  <div className="relative">
+                    <img
+                      src={pet.image}
+                      alt={pet.name}
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="absolute top-3 right-3 bg-green-500 text-white px-2 py-1 rounded-full text-sm font-semibold">
+                      {pet.compatibility?.score}% Match
+                    </div>
+                    <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-full text-sm">
+                      <FaHeart />
+                    </div>
+                  </div>
+                  
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-xl font-bold text-gray-800">{pet.name}</h3>
+                      <div className="text-2xl">
+                        {pet.gender === 'Male' ? (
+                          <FaMars className="text-blue-500" />
+                        ) : (
+                          <FaVenus className="text-pink-500" />
+                        )}
+                      </div>
+                    </div>
+                    
+                    <p className="text-gray-600 mb-2">{pet.breed}</p>
+                    
+                    <div className="flex items-center text-sm text-gray-500 mb-2">
+                      <FaBirthdayCake className="mr-1" />
+                      <span>{pet.age} years old</span>
+                      <span className="mx-2">•</span>
+                      <span>{pet.weight} kg</span>
+                    </div>
+                    
+                    <div className="flex items-center text-sm text-gray-500 mb-3">
+                      <FaMapMarkerAlt className="mr-1" />
+                      <span>{pet.location}</span>
+                    </div>
+                    
+                    {/* Compatibility factors */}
+                    <div className="mb-4">
+                      <div className="text-sm font-medium text-gray-700 mb-1">Why it's a good match:</div>
+                      <div className="flex flex-wrap gap-1">
+                        {pet.compatibility?.factors.slice(0, 2).map((factor, index) => (
+                          <span
+                            key={index}
+                            className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full"
+                          >
+                            {factor}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <Button
+                      variant="primary"
+                      onClick={() => handleViewMatch(pet)}
+                      className="w-full"
+                      icon={<FaArrowRight />}
+                    >
+                      View Match Details
+                    </Button>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && filteredPets.length === 0 && (
+          <motion.div 
+            variants={itemVariants}
+            className="text-center py-12"
+          >
+            <FaPaw className="mx-auto text-6xl text-gray-300 mb-4" />
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">No pets found</h3>
+            <p className="text-gray-500 mb-4">
+              {searchQuery 
+                ? "Try adjusting your search criteria or browse all available pets."
+                : "There are no pets available for breeding at the moment."
+              }
+            </p>
+            {searchQuery && (
               <Button
                 variant="secondary"
                 onClick={() => {
-                  setSelectedPet(null);
-                  setMatches([]);
+                  setSearchQuery("");
+                  setFilteredPets(pets);
                 }}
-                className="mr-4"
               >
-                Back to All Pets
+                Clear Search
               </Button>
-              <h2 className="text-2xl font-semibold">
-                Matches for {selectedPet.name}
-              </h2>
-            </div>
-
-            {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="text-4xl text-purple-600"
-                >
-                  <FaPaw />
-                </motion.div>
-              </div>
-            ) : matches.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-md p-6 text-center">
-                <FaPaw className="text-6xl text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">No Matches Found</h3>
-                <p className="text-gray-600">
-                  We couldn't find any suitable breeding matches for {selectedPet.name} at this time.
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {matches.map((match) => (
-                  <motion.div
-                    key={match._id}
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-white rounded-lg shadow-md overflow-hidden"
-                  >
-                    <div className="aspect-square overflow-hidden relative">
-                      {match.image ? (
-                        <img
-                          src={match.image}
-                          alt={match.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                          <FaPaw className="text-6xl text-gray-400" />
-                        </div>
-                      )}
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                        <h3 className="text-xl font-bold text-white">{match.name}</h3>
-                        <p className="text-white/90">{match.breed}</p>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <div className="grid grid-cols-2 gap-2 mb-4">
-                        <div>
-                          <p className="text-sm text-gray-600">Age</p>
-                          <p className="font-semibold">{match.age} years</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Gender</p>
-                          <p className="font-semibold capitalize">{match.gender}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Health</p>
-                          <p className="font-semibold">Excellent</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Match Score</p>
-                          <p className="font-semibold text-green-600">
-                            {Math.floor(Math.random() * 30) + 70}%
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <Button
-                          variant="secondary"
-                          onClick={() => navigate(`/pets/${match._id}`)}
-                          className="flex-1 mr-2"
-                        >
-                          View Profile
-                        </Button>
-                        <Button
-                          onClick={() => handleCreateBreedingRequest(match._id)}
-                          className="flex-1 ml-2"
-                        >
-                          <FaHeart className="mr-2" /> Match
-                        </Button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
             )}
-          </div>
-        ) : (
-          <div>
-            {filteredPets.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-md p-6 text-center">
-                <FaPaw className="text-6xl text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">No Pets Found</h3>
-                <p className="text-gray-600">
-                  You don't have any pets registered for breeding yet.
-                </p>
-                <Button
-                  onClick={() => navigate("/pets/add")}
-                  className="mt-4"
-                >
-                  Add a Pet
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredPets.map((pet) => (
-                  <Card key={pet._id}>
-                    <div className="aspect-square overflow-hidden relative mb-4">
-                      {pet.image ? (
-                        <img
-                          src={pet.image}
-                          alt={pet.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                          <FaPaw className="text-6xl text-gray-400" />
-                        </div>
-                      )}
-                    </div>
-                    <h3 className="text-xl font-bold text-purple-700 mb-1">{pet.name}</h3>
-                    <p className="text-gray-600 mb-3">{pet.breed}</p>
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                      <div>
-                        <p className="text-sm text-gray-600">Age</p>
-                        <p className="font-semibold">{pet.age} years</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Gender</p>
-                        <p className="font-semibold capitalize">{pet.gender}</p>
-                      </div>
-                    </div>
-                    <Button
-                      onClick={() => handleFindMatches(pet)}
-                      className="w-full"
-                    >
-                      Find Matches <FaArrowRight className="ml-2" />
-                    </Button>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
+          </motion.div>
         )}
       </motion.div>
+
+      {/* Modals */}
+      <PetMatchModal
+        isOpen={showMatchModal}
+        onClose={() => setShowMatchModal(false)}
+        pet={selectedMatchPet}
+        onSendRequest={handleSendBreedingRequest}
+        isLoading={sendingRequest}
+      />
+
+      <AdvancedSearchModal
+        isOpen={showAdvancedSearch}
+        onClose={() => setShowAdvancedSearch(false)}
+        onSearch={handleAdvancedSearch}
+        searchType="breeding"
+      />
     </Layout>
   );
 };

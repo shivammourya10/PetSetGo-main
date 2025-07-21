@@ -8,16 +8,21 @@ import Button from "../components/Button";
 import Alert from "../components/Alert";
 import FileUpload from "../components/FileUpload";
 import MedicalService from "../services/MedicalService";
+import PetService from "../services/PetService";
+import { useAuth } from "../context/AuthContext";
 
 const AddMedicalRecordPage = () => {
   const navigate = useNavigate();
   const { petId } = useParams();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [pet, setPet] = useState(null);
+  const [userPets, setUserPets] = useState([]);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   
   const [formData, setFormData] = useState({
+    petId: petId || "",
     recordType: "checkup",
     date: new Date().toISOString().split('T')[0],
     veterinarianName: "",
@@ -36,25 +41,57 @@ const AddMedicalRecordPage = () => {
       
       try {
         setIsLoading(true);
-        // In a real app, this would be an API call
-        // const response = await PetService.getPet(petId);
+        const response = await PetService.getPet(petId);
+        console.log('Pet data for medical record:', response.data);
         
-        // For now, using dummy data
-        setPet({
-          _id: petId,
-          name: "Buddy",
-          species: "dog",
-          breed: "Golden Retriever"
-        });
+        // Map backend fields to frontend expected names - same mapping as other components
+        const rawPet = response.data?.data || response.data;
+        const mappedPet = {
+          _id: rawPet._id,
+          name: rawPet.PetName || 'Unknown',
+          species: rawPet.PetType || 'Unknown',
+          breed: rawPet.Breed || 'Unknown'
+        };
+        
+        console.log('Mapped pet for medical record:', mappedPet);
+        setPet(mappedPet);
       } catch (err) {
         setError("Failed to load pet details.");
         console.error("Error fetching pet:", err);
+        // No fallback data - only show real pets from database
+        setPet(null);
       } finally {
         setIsLoading(false);
       }
     };
 
+    const fetchUserPets = async () => {
+      if (petId) return; // If we have a specific pet ID, no need to fetch all pets
+      
+      try {
+        const response = await PetService.getUserPets();
+        console.log('User pets for medical record:', response.data);
+        
+        // Map backend pets to frontend format with proper field mapping
+        const pets = (response.data?.pets || response.data || []).map(rawPet => ({
+          _id: rawPet._id,
+          id: rawPet._id,
+          // Map actual backend field names to frontend expected names
+          name: rawPet.PetName || rawPet.name || 'Unknown',
+          species: rawPet.PetType || rawPet.species || 'Unknown',
+          breed: rawPet.Breed || rawPet.breed || 'Unknown'
+        }));
+        
+        console.log('Mapped pets for dropdown:', pets);
+        setUserPets(pets);
+      } catch (err) {
+        console.error("Error fetching user pets:", err);
+        setUserPets([]);
+      }
+    };
+
     fetchPet();
+    fetchUserPets();
   }, [petId]);
 
   const handleChange = (e) => {
@@ -167,16 +204,27 @@ const AddMedicalRecordPage = () => {
                     <select
                       id="petSelect"
                       name="petId"
+                      value={formData.petId}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                       required
                     >
                       <option value="">Select a pet</option>
-                      {/* This would be populated from API in a real app */}
-                      <option value="1">Buddy (Golden Retriever)</option>
-                      <option value="2">Luna (Siamese Cat)</option>
-                      <option value="3">Max (German Shepherd)</option>
+                      {userPets.length > 0 ? (
+                        userPets.map(pet => (
+                          <option key={pet._id} value={pet._id}>
+                            {pet.name} ({pet.species} - {pet.breed})
+                          </option>
+                        ))
+                      ) : (
+                        <option value="" disabled>Loading pets...</option>
+                      )}
                     </select>
+                    {userPets.length === 0 && (
+                      <p className="text-sm text-gray-500 mt-1">
+                        No pets found. Please add a pet first.
+                      </p>
+                    )}
                   </div>
                 )}
 

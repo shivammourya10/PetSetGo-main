@@ -68,40 +68,24 @@ const HomePage = () => {
   // Fetch dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
-      console.log('Current user:', user);
-      if (!user || !user._id) {
-        console.log('No user or user ID available');
-        return;
-      }
+      if (!user) return;
       
       try {
         setLoading(prev => ({ ...prev, pets: true, stats: true }));
         
         // Fetch user's pets
         const petsResponse = await PetService.getUserPets();
-        console.log('Pets API Response:', petsResponse.data);
-        // The backend returns pets in response.data.pets
-        const userPets = petsResponse.data?.pets || [];
+        const userPets = petsResponse.data || [];
         
-        // Enhanced pets with health data, mapping backend field names
+        // Enhanced pets with health data
         const enhancedPets = userPets.slice(0, 4).map(pet => ({
-          // Use MongoDB _id as the primary ID
-          id: pet._id,
-          _id: pet._id,
-          // Map actual backend field names to frontend expected names
-          name: pet.PetName || 'Unknown',
-          species: pet.PetType || 'Unknown',
-          breed: pet.Breed || 'Unknown', 
-          age: pet.Age || 'Unknown',
-          weight: pet.Weight || 'Unknown',
-          gender: pet.Gender || 'Unknown',
-          // Enhanced fields
-          image: pet.PicUrl || `https://source.unsplash.com/300x300/?${(pet.PetType || 'pet').toLowerCase()}`,
+          ...pet,
+          image: pet.image || `https://source.unsplash.com/300x300/?${pet.species?.toLowerCase() || 'pet'}`,
           healthScore: pet.healthScore || Math.floor(Math.random() * 20) + 80,
           lastCheckup: pet.lastCheckup || new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000),
           nextAppointment: pet.nextAppointment || (Math.random() > 0.7 ? new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000) : null),
           mood: ['Happy', 'Playful', 'Calm', 'Energetic'][Math.floor(Math.random() * 4)],
-          isAvailableForBreeding: pet.AvailableForBreeding || false,
+          isAvailableForBreeding: pet.isAvailableForBreeding ?? Math.random() > 0.5,
         }));
         
         setPets(enhancedPets);
@@ -148,12 +132,26 @@ const HomePage = () => {
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
         
-        // No fallback data - only show real pets from database
-        setPets([]);
+        // Fallback data
+        const mockPets = [
+          { 
+            id: 1, name: "Buddy", species: "Dog", breed: "Golden Retriever", age: 3, gender: "Male",
+            healthScore: 95, mood: "Happy", lastCheckup: new Date('2024-01-15'),
+            nextAppointment: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+            image: "https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80"
+          },
+          { 
+            id: 2, name: "Luna", species: "Cat", breed: "Siamese", age: 2, gender: "Female",
+            healthScore: 88, mood: "Playful", lastCheckup: new Date('2024-01-10'),
+            image: "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80"
+          }
+        ];
+        
+        setPets(mockPets);
         setDashboardStats({
-          totalPets: 0,
-          upcomingAppointments: 0,
-          breedingRequests: 0,
+          totalPets: mockPets.length,
+          upcomingAppointments: 1,
+          breedingRequests: 2,
           forumActivity: 5
         });
         
@@ -294,7 +292,7 @@ const HomePage = () => {
 
         {/* Dashboard Stats */}
         <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card key="stat-pets" className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+          <Card className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-sm">Total Pets</p>
@@ -304,7 +302,7 @@ const HomePage = () => {
             </div>
           </Card>
           
-          <Card key="stat-appointments" className="p-4 bg-gradient-to-r from-green-500 to-green-600 text-white">
+          <Card className="p-4 bg-gradient-to-r from-green-500 to-green-600 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100 text-sm">Appointments</p>
@@ -314,7 +312,7 @@ const HomePage = () => {
             </div>
           </Card>
           
-          <Card key="stat-breeding" className="p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+          <Card className="p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100 text-sm">Breeding</p>
@@ -324,7 +322,7 @@ const HomePage = () => {
             </div>
           </Card>
           
-          <Card key="stat-forum" className="p-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+          <Card className="p-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-orange-100 text-sm">Forum Posts</p>
@@ -341,7 +339,7 @@ const HomePage = () => {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {quickActions.map((action, index) => (
               <motion.div
-                key={`quick-action-${index}`}
+                key={index}
                 variants={itemVariants}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -377,7 +375,7 @@ const HomePage = () => {
               {loading.pets ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[...Array(4)].map((_, index) => (
-                    <div key={`loading-${index}`} className="bg-gray-100 rounded-xl p-4 animate-pulse">
+                    <div key={index} className="bg-gray-100 rounded-xl p-4 animate-pulse">
                       <div className="flex items-center gap-3">
                         <div className="w-16 h-16 bg-gray-300 rounded-full"></div>
                         <div className="flex-1">
@@ -392,10 +390,10 @@ const HomePage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {pets.map((pet) => (
                     <motion.div
-                      key={pet.id || pet._id || `pet-${pet.name}`}
+                      key={pet.id}
                       variants={itemVariants}
                       whileHover={{ scale: 1.02 }}
-                      onClick={() => navigate(`/pets/${pet.id || pet._id}`)}
+                      onClick={() => navigate(`/pets/${pet.id}`)}
                       className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 cursor-pointer border hover:shadow-md transition-all"
                     >
                       <div className="flex items-center gap-3">
@@ -485,7 +483,7 @@ const HomePage = () => {
                 <div className="flex gap-1">
                   {petTips.map((_, index) => (
                     <div
-                      key={`tip-indicator-${index}`}
+                      key={index}
                       className={`w-2 h-2 rounded-full transition-colors ${
                         index === currentTipIndex ? 'bg-purple-500' : 'bg-gray-300'
                       }`}
@@ -514,7 +512,7 @@ const HomePage = () => {
               {loading.articles ? (
                 <div className="space-y-3">
                   {[...Array(2)].map((_, index) => (
-                    <div key={`article-loading-${index}`} className="animate-pulse">
+                    <div key={index} className="animate-pulse">
                       <div className="h-4 bg-gray-300 rounded mb-2"></div>
                       <div className="h-3 bg-gray-300 rounded w-3/4"></div>
                     </div>

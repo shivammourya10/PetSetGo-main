@@ -7,6 +7,7 @@ import petRoutes from "./routes/petRoutes.js"
 import petMateRoutes from "./routes/petMateRoutes.js"
 import VetArticleRoute from "./routes/VetArticleRoute.js"
 import healthRoutes from "./routes/healthRoutes.js"
+import uploadRoutes from "./routes/uploadRoutes.js"
 import bodyParser from 'body-parser';
 import dotenv from "dotenv";
 import cors from 'cors';
@@ -63,6 +64,7 @@ app.use("/api/medical", MedRouter); // Added proper prefix
 app.use("/api/articles", VetArticleRoute); // Added proper prefix
 app.use("/api/petmate", petMateRoutes); // Added proper prefix
 app.use("/api/health", healthRoutes); // Health check endpoint
+app.use("/api/upload", uploadRoutes); // File upload endpoint
 
 app.listen(process.env.PORT,()=>{
     console.log('Server is running Now');

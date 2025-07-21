@@ -13,17 +13,17 @@ const AdoptionService = {
     return api.get(`/api/pets/rescueAndAdoption/${petId}`);
   },
 
-  // Submit adoption application
+  // Submit adoption application (now implemented in backend)
   submitAdoptionRequest: (petId, requestData) => {
     return api.post(`/api/pets/adoption/request/${petId}`, requestData);
   },
 
-  // Get user's adoption applications
+  // Get user's adoption applications (now implemented in backend)
   getUserApplications: () => {
     return api.get('/api/pets/adoption/requests');
   },
 
-  // Get specific adoption application
+  // Get specific adoption application (now implemented in backend)
   getApplication: (applicationId) => {
     return api.get(`/api/pets/adoption/requests/${applicationId}`);
   },
@@ -33,8 +33,8 @@ const AdoptionService = {
     const formData = new FormData();
     
     // Add required fields based on the backend model
-    // Backend expects: typeOfHelp, description, and a file
-    formData.append('type', petData.type || 'Adoption'); // 'Rescue' or 'Adoption'
+    // Backend expects: typeOfHelp (not 'type'), description, and a file
+    formData.append('typeOfHelp', petData.type || 'Adoption'); // Backend expects 'typeOfHelp'
     formData.append('description', petData.description);
     
     // Add additional pet data

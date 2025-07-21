@@ -47,16 +47,8 @@ const AdoptionRequestPage = () => {
         console.error("Error fetching pet:", err);
         setError("Failed to load pet details. Please try again.");
         
-        // Fallback to dummy data if API fails
-        setPet({
-          _id: petId,
-          name: "Buddy",
-          species: "dog",
-          breed: "Golden Retriever",
-          age: 2,
-          gender: "male",
-          image: "https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
-        });
+        // No fallback data - only show real pets from database
+        setPet(null);
       } finally {
         setIsLoading(false);
       }

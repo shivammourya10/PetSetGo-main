@@ -26,59 +26,12 @@ const MedicalRecordsPage = () => {
         // const petsResponse = await PetService.getUserPets();
         // const pets = petsResponse.data;
         
-        // Use dummy data for now
-        const dummyPets = [
-          { id: 1, name: "Buddy", species: "Dog", breed: "Golden Retriever", image: "https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" },
-          { id: 2, name: "Luna", species: "Cat", breed: "Siamese", image: "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" },
-          { id: 3, name: "Max", species: "Dog", breed: "Beagle", image: "https://images.unsplash.com/photo-1586671267731-da2cf3ceeb80?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" },
-        ];
+        // No dummy data - only show real pets from database
+        setPets([]);
         
-        setPets(dummyPets);
-        
-        // If we have pets, select the first one and fetch its records
-        if (dummyPets.length > 0) {
-          setSelectedPet(dummyPets[0]);
-          
-          // In a real app, we would fetch medical records for this pet
-          // const recordsResponse = await MedicalService.getMedicalRecords(dummyPets[0].id);
-          // setRecords(recordsResponse.data);
-          
-          // Use dummy data for now
-          const dummyRecords = [
-            {
-              id: 101,
-              petId: 1,
-              date: '2025-07-01T10:30:00Z',
-              title: 'Annual Checkup',
-              description: 'Regular annual checkup. All vitals normal.',
-              prescription: 'Continue current flea and tick prevention.',
-              vet: 'Dr. Smith',
-              clinic: 'Happy Paws Veterinary'
-            },
-            {
-              id: 102,
-              petId: 1,
-              date: '2025-06-15T14:20:00Z',
-              title: 'Vaccination',
-              description: 'Rabies and DHPP booster vaccines administered.',
-              prescription: 'No medications prescribed.',
-              vet: 'Dr. Johnson',
-              clinic: 'Happy Paws Veterinary'
-            },
-            {
-              id: 103,
-              petId: 1,
-              date: '2025-05-10T09:15:00Z',
-              title: 'Minor Injury',
-              description: 'Cut on right front paw. Cleaned and bandaged.',
-              prescription: 'Antibiotic ointment applied twice daily for 5 days.',
-              vet: 'Dr. Williams',
-              clinic: 'Emergency Pet Care'
-            },
-          ];
-          
-          setRecords(dummyRecords);
-        }
+        // No selected pet if no pets available
+        setSelectedPet(null);
+        setRecords([]);
       } catch (err) {
         console.error('Error fetching data:', err);
         setError('Failed to load data. Please try again later.');

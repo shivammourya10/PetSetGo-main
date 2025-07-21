@@ -5,13 +5,19 @@ import RescueAdoptionSchema from "../models/RescueAndAdoption.js";
 const descriptionParser = zod.string().min(5);
 const typeParser = zod.enum(['Rescue', 'Adoption']);
 const RescueAdoption = async (req,res) =>{
-    const {description,type} = req.body;
+    // Extract both 'type' and 'typeOfHelp' to handle both frontend variations
+    const {description, type, typeOfHelp} = req.body;
+    const finalType = typeOfHelp || type; // Use typeOfHelp if provided, otherwise use type
+    
     const isDescription = descriptionParser.safeParse(description);
-    const isType = typeParser.safeParse(type);
+    const isType = typeParser.safeParse(finalType);
     if(!isDescription.success || !isType.success){
         return res.status(400).json({
             message: "Invalid Description or Type",
-            error: isDescription.error || isType.error
+            errors: {
+                description: !isDescription.success ? isDescription.error.issues : null,
+                type: !isType.success ? isType.error.issues : null
+            }
         });
     }
     if(!req.file){
@@ -26,7 +32,7 @@ const RescueAdoption = async (req,res) =>{
         });
     }
     const rescueAdoption = new RescueAdoptionSchema({
-        typeOfHelp: type,
+        typeOfHelp: finalType,
         picUrl: uploadedFile.url,
         description: description,
     });

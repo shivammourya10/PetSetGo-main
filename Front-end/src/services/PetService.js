@@ -122,6 +122,16 @@ const PetService = {
     return api.get(`/api/pets/${userId}/returnPets`);
   },
 
+  // Get single pet details (now implemented in backend)
+  getPet: (petId) => {
+    return api.get(`/api/pets/${petId}`);
+  },
+
+  // Delete pet (now implemented in backend)
+  deletePet: (petId) => {
+    return api.delete(`/api/pets/${petId}`);
+  },
+
   // Update pet
   updatePet: (petId, petData, file) => {
     const formData = new FormData();
@@ -152,9 +162,15 @@ const PetService = {
   rescueAndAdoption: (petData, file) => {
     const formData = new FormData();
     
-    // Add pet data
+    // Backend expects 'typeOfHelp' and 'description' fields
+    formData.append('typeOfHelp', petData.type || 'Adoption');
+    formData.append('description', petData.description);
+    
+    // Add other pet data
     Object.keys(petData).forEach(key => {
-      formData.append(key, petData[key]);
+      if (key !== 'type' && key !== 'description') {
+        formData.append(key, petData[key]);
+      }
     });
     
     // Add file if exists

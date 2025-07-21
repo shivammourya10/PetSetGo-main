@@ -24,7 +24,10 @@ const getVetArticles = async (req,res) => {
         return res.send(formattedArticles);
     } catch (error) {
         console.error('Error fetching articles:', error);
-        throw new Error('Failed to fetch articles');
+        return res.status(500).json({
+            message: 'Failed to fetch articles',
+            error: error.message
+        });
     }
 };
 

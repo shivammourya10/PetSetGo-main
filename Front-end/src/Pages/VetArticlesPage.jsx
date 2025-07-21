@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaNewspaper, FaExternalLinkAlt, FaBookmark, FaRegBookmark } from 'react-icons/fa';
 import Layout from '../components/Layout';
 import Card, { CardBody } from '../components/Card';
@@ -7,6 +8,7 @@ import Button from '../components/Button';
 import ArticleService from '../services/ArticleService';
 
 const VetArticlesPage = () => {
+  const navigate = useNavigate();
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

@@ -40,37 +40,19 @@ const PetsPage = () => {
       try {
         setLoading(true);
         const response = await PetService.getUserPets();
-        console.log('Pets API Response:', response.data);
+        // Fix: Extract pets array from response.data.data
+        const userPets = response.data?.data || [];
         
-        // The backend returns pets in response.data.pets
-        const userPets = response.data?.pets || [];
-        
-        // Map the backend field names to frontend expected names
+        // Enhanced pets with additional data
         const enhancedPets = userPets.map(pet => ({
-          // Use MongoDB _id as the primary ID
-          id: pet._id,
-          _id: pet._id,
-          // Map actual backend field names to frontend expected names
-          name: pet.PetName || 'Unknown',
-          species: pet.PetType || 'Unknown', 
-          breed: pet.Breed || 'Unknown',
-          age: pet.Age || 'Unknown',
-          weight: pet.Weight || 'Unknown',
-          gender: pet.Gender || 'Unknown',
-          description: pet.Description || 'No description available',
-          location: pet.Location || 'Unknown location',
-          // Enhanced fields with fallbacks
-          image: pet.PicUrl || `https://source.unsplash.com/400x400/?${(pet.PetType || 'pet').toLowerCase()}`,
+          ...pet,
+          image: pet.image || `https://source.unsplash.com/400x400/?${pet.species?.toLowerCase() || 'pet'}`,
           healthScore: pet.healthScore || Math.floor(Math.random() * 20) + 80,
           lastCheckup: pet.lastCheckup || new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000),
-          isAvailableForBreeding: pet.AvailableForBreeding || false,
+          isAvailableForBreeding: pet.isAvailableForBreeding ?? Math.random() > 0.5,
           isFavorite: pet.isFavorite ?? false,
-          vaccinated: pet.vaccinated ?? true,
-          createdAt: pet.createdAt,
-          updatedAt: pet.updatedAt,
         }));
         
-        console.log('Enhanced pets:', enhancedPets);
         setPets(enhancedPets);
         setFilteredPets(enhancedPets);
         
@@ -78,9 +60,80 @@ const PetsPage = () => {
         console.error('Error fetching pets:', err);
         setError('Failed to load your pets. Using sample data.');
         
-        // No fallback data - only show real pets from database
-        setPets([]);
-        setFilteredPets([]);
+        // Enhanced fallback data
+        const mockPets = [
+          { 
+            id: 1, 
+            name: "Buddy", 
+            species: "Dog",
+            breed: "Golden Retriever",
+            age: 3,
+            gender: "Male",
+            weight: 30,
+            location: "San Francisco, CA",
+            healthScore: 95,
+            lastCheckup: new Date('2024-01-15'),
+            isAvailableForBreeding: true,
+            isFavorite: true,
+            vaccinated: true,
+            description: "Buddy is a friendly and energetic Golden Retriever who loves playing fetch and swimming.",
+            image: "https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+          },
+          { 
+            id: 2, 
+            name: "Luna", 
+            species: "Cat",
+            breed: "Siamese",
+            age: 2,
+            gender: "Female",
+            weight: 4,
+            location: "Los Angeles, CA",
+            healthScore: 88,
+            lastCheckup: new Date('2024-01-10'),
+            isAvailableForBreeding: false,
+            isFavorite: false,
+            vaccinated: true,
+            description: "Luna is an elegant Siamese cat with striking blue eyes and a playful personality.",
+            image: "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+          },
+          { 
+            id: 3, 
+            name: "Max", 
+            species: "Dog",
+            breed: "Beagle",
+            age: 1,
+            gender: "Male",
+            weight: 12,
+            location: "Seattle, WA",
+            healthScore: 92,
+            lastCheckup: new Date('2024-01-20'),
+            isAvailableForBreeding: false,
+            isFavorite: true,
+            vaccinated: true,
+            description: "Max is a young and curious Beagle who loves exploring and following scents.",
+            image: "https://images.unsplash.com/photo-1586671267731-da2cf3ceeb80?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+          },
+          { 
+            id: 4, 
+            name: "Bella", 
+            species: "Cat",
+            breed: "Persian",
+            age: 4,
+            gender: "Female",
+            weight: 5,
+            location: "New York, NY",
+            healthScore: 85,
+            lastCheckup: new Date('2023-12-28'),
+            isAvailableForBreeding: true,
+            isFavorite: false,
+            vaccinated: true,
+            description: "Bella is a beautiful Persian cat with luxurious fur and a calm, regal demeanor.",
+            image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+          },
+        ];
+        
+        setPets(mockPets);
+        setFilteredPets(mockPets);
       } finally {
         setLoading(false);
       }
@@ -201,27 +254,25 @@ const PetsPage = () => {
   const handleDeletePet = async (petId) => {
     try {
       await PetService.deletePet(petId);
-      setPets(pets.filter(pet => (pet.id || pet._id) !== petId));
+      setPets(pets.filter(pet => pet.id !== petId));
       setSuccess('Pet deleted successfully!');
       setDeleteModal({ show: false, petId: null });
     } catch (err) {
-      console.error('Delete pet error:', err);
       setError('Failed to delete pet. Please try again.');
     }
   };
 
   const toggleFavorite = async (petId) => {
     try {
-      const pet = pets.find(p => (p.id || p._id) === petId);
+      const pet = pets.find(p => p.id === petId);
       const updatedPets = pets.map(p => 
-        (p.id || p._id) === petId ? { ...p, isFavorite: !p.isFavorite } : p
+        p.id === petId ? { ...p, isFavorite: !p.isFavorite } : p
       );
       setPets(updatedPets);
       
       // In a real app, you'd make an API call here
       // await PetService.updatePet(petId, { isFavorite: !pet.isFavorite });
     } catch (err) {
-      console.error('Toggle favorite error:', err);
       setError('Failed to update favorite status.');
     }
   };
@@ -425,7 +476,7 @@ const PetsPage = () => {
                         <Button
                           size="sm"
                           variant="secondary"
-                          onClick={() => navigate(`/pets/${pet.id || pet._id}`)}
+                          onClick={() => navigate(`/pets/${pet.id}`)}
                           icon={<FaEye />}
                         >
                           View
@@ -433,7 +484,7 @@ const PetsPage = () => {
                         <Button
                           size="sm"
                           variant="primary"
-                          onClick={() => navigate(`/pets/${pet.id || pet._id}/edit`)}
+                          onClick={() => navigate(`/pets/${pet.id}/edit`)}
                           icon={<FaEdit />}
                         >
                           Edit
@@ -463,7 +514,7 @@ const PetsPage = () => {
 
                     {/* Favorite toggle */}
                     <button
-                      onClick={() => toggleFavorite(pet.id || pet._id)}
+                      onClick={() => toggleFavorite(pet.id)}
                       className="absolute bottom-3 right-3 bg-white bg-opacity-90 p-2 rounded-full hover:bg-opacity-100 transition-all"
                     >
                       <FaHeart className={`${pet.isFavorite ? 'text-red-500' : 'text-gray-400'}`} />
@@ -505,7 +556,7 @@ const PetsPage = () => {
                       <Button
                         size="sm"
                         variant="primary"
-                        onClick={() => navigate(`/pets/${pet.id || pet._id}`)}
+                        onClick={() => navigate(`/pets/${pet.id}`)}
                         className="flex-1"
                       >
                         View Details
@@ -513,7 +564,7 @@ const PetsPage = () => {
                       <Button
                         size="sm"
                         variant="danger"
-                        onClick={() => setDeleteModal({ show: true, petId: pet.id || pet._id })}
+                        onClick={() => setDeleteModal({ show: true, petId: pet.id })}
                         icon={<FaTrash />}
                       />
                     </div>
@@ -563,7 +614,7 @@ const PetsPage = () => {
                       <Button
                         size="sm"
                         variant="secondary"
-                        onClick={() => navigate(`/pets/${pet.id || pet._id}`)}
+                        onClick={() => navigate(`/pets/${pet.id}`)}
                         icon={<FaEye />}
                       >
                         View
@@ -571,7 +622,7 @@ const PetsPage = () => {
                       <Button
                         size="sm"
                         variant="primary"
-                        onClick={() => navigate(`/pets/${pet.id || pet._id}/edit`)}
+                        onClick={() => navigate(`/pets/${pet.id}/edit`)}
                         icon={<FaEdit />}
                       >
                         Edit
@@ -579,7 +630,7 @@ const PetsPage = () => {
                       <Button
                         size="sm"
                         variant="danger"
-                        onClick={() => setDeleteModal({ show: true, petId: pet.id || pet._id })}
+                        onClick={() => setDeleteModal({ show: true, petId: pet.id })}
                         icon={<FaTrash />}
                       />
                     </div>

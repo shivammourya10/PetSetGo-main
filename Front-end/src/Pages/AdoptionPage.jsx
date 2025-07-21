@@ -38,83 +38,8 @@ const AdoptionPage = () => {
         console.error("Error fetching adoption pets:", err);
         setError("Failed to load adoption listings. Please try again.");
         
-        // Dummy data for demonstration if API fails
-        const dummyPets = [
-          {
-            _id: "1",
-            name: "Max",
-            age: 2,
-            species: "dog",
-            breed: "Golden Retriever",
-            gender: "male",
-            image: "https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-            description: "Friendly and energetic dog looking for a loving home.",
-            location: "New York, NY",
-            distance: 5
-          },
-          {
-            _id: "2",
-            name: "Luna",
-            age: 1,
-            species: "cat",
-            breed: "Siamese",
-            gender: "female",
-            image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-            description: "Quiet and gentle cat who loves to cuddle.",
-            location: "Brooklyn, NY",
-            distance: 7
-          },
-          {
-            _id: "3",
-            name: "Buddy",
-            age: 3,
-            species: "dog",
-            breed: "Beagle",
-            gender: "male",
-            image: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-            description: "Loving and loyal companion who's great with kids.",
-            location: "Queens, NY",
-            distance: 12
-          },
-          {
-            _id: "4",
-            name: "Whiskers",
-            age: 2,
-            species: "cat",
-            breed: "Maine Coon",
-            gender: "male",
-            image: "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-            description: "Playful and fluffy cat looking for a forever home.",
-            location: "Manhattan, NY",
-            distance: 3
-          },
-          {
-            _id: "5",
-            name: "Daisy",
-            age: 1,
-            species: "dog",
-            breed: "Poodle",
-            gender: "female",
-            image: "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-            description: "Smart and friendly poodle who loves to learn new tricks.",
-            location: "Staten Island, NY",
-            distance: 20
-          },
-          {
-            _id: "6",
-            name: "Oliver",
-            age: 4,
-            species: "cat",
-            breed: "Tabby",
-            gender: "male",
-            image: "https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-            description: "Calm and independent cat who enjoys sunny spots.",
-            location: "Bronx, NY",
-            distance: 15
-          }
-        ];
-        
-        setPets(dummyPets);
+        // No dummy data - only show real pets from database
+        setPets([]);
         setIsLoading(false);
       }
     };

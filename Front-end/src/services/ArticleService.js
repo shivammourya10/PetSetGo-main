@@ -4,7 +4,7 @@ import api from './api';
 const ArticleService = {
   // Get articles
   getArticles: () => {
-    return api.get('/api/articles');
+    return api.get('/api/articles/vetArticles');
   },
 };
 
