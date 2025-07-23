@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import './index.css';
 import { AuthProvider } from './context/AuthContext.jsx';
-import PrivateRoute from './components/PrivateRoute';
+import PrivateRoute from './Components/PrivateRoute';
 import App from './App.jsx';
 import LoginPage from './Pages/LoginPage.jsx';
 import RegisterPage from './Pages/RegisterPage.jsx';
